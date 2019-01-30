@@ -1,0 +1,297 @@
+#include "CFiledef.h"
+
+CFileDef::CFileDef(const std::string &file, bool binary)
+{
+	/* Initialize m_opened */
+	m_opened = false;
+
+	/* Initialize num of keys */
+	m_numkeys = 0;
+
+	/* try to open the file */
+	if (binary)
+		m_Filedef.open(file.c_str(), std::ifstream::in | std::ifstream::binary);
+	else
+		m_Filedef.open(file.c_str());
+
+	/* if there is an error opening the file */
+	if (m_Filedef.good() && !m_Filedef.eof())
+	{
+		m_opened = true;
+	}
+}
+
+CFileDef::CFileDef(const std::string &file)
+{
+	/* Initialize m_opened */
+	m_opened = false;
+
+	/* Initialize num of keys */
+	m_numkeys = 0;
+
+	/* try to open the file */
+	m_Filedef.open(file.c_str());
+
+	/* if there is an error opening the file */
+	if (m_Filedef.good() && !m_Filedef.eof())
+	{
+		m_opened = true;
+	}
+}
+
+/*
+	Destructor: Close and delete object
+ */
+CFileDef::~CFileDef()
+{
+	if ( m_Filedef && m_opened )
+	{
+		/* Close the file stream */
+		m_Filedef.close();
+		m_opened = false;
+	}
+}
+
+/*
+	Return if the file was opened
+*/
+bool CFileDef::getIsOpen()
+{
+	return m_opened;
+}
+
+/* This method get the value from 'k' key in the file in this way:
+
+P.e.
+# comment
+key key_value
+{
+	subkey1 subkey1_value subkey2_value .. subkey[MAX]_value
+	...
+}
+*/
+void CFileDef::readObjectKeysValues()
+{
+	unsigned int i = 0;
+	std::string line;
+			
+	if (m_opened)
+	{
+		while (m_Filedef.good() && !m_Filedef.eof())
+		{
+			/* get line from file and stores into buffer */
+			std::getline(m_Filedef, line);
+			
+			/* ignores '#' '\n' '{' or '\0' characters */
+			if (line.size() != 0 && line.at(0) != '#' && line.at(0) != '\n' && line.at(0) != '\0')
+			{
+				//Get the line into std::string
+				std::stringstream(line) >> line;
+
+				//Get the name (the entire line without minus sign)
+				if (line.at(0) == '-')
+				{
+					m_name = line.substr(1, line.length());
+				}
+				
+				//Get next line
+				std::getline(m_Filedef, line);
+
+				// Inits
+				if (line.at(0) == '{')
+				{
+					//Next line discarding empty or comments
+					line = GetValidLine();
+
+					//Read and format data
+					while (line.at(0) != '}')
+					{
+						//Delete key/subkeys
+						m_keys[m_numkeys].key.erase();
+						m_keys[m_numkeys].n_values = 0;
+						for (i = 0; i < MAX_SUBKEYS; i++)
+						{
+							m_keys[m_numkeys].values[i].erase();
+						}
+
+						//Get the main key
+						std::stringstream (line) >> m_keys[m_numkeys].key;
+						
+						//Avoid error
+						if (m_keys[m_numkeys].key.length() + 2 < line.length())
+							line = line.substr(m_keys[m_numkeys].key.length() + 2, line.length());
+
+						//Get the subkeys for each key
+						for (i = 0;i < MAX_SUBKEYS;i++)
+						{
+							if (line.length() > 0)
+							{
+								std::stringstream(line) >> m_keys[m_numkeys].values[i];
+								m_keys[m_numkeys].n_values++;
+								if (m_keys[m_numkeys].values[i].length() < line.length())
+									line = line.substr(m_keys[m_numkeys].values[i].length() + 1, line.length());
+								else
+									break;
+							}
+						}
+
+						//Next key/values
+						m_numkeys++;
+
+						//Next line discarding empty or comments
+						line = GetValidLine();
+					}
+				}
+			}
+		}
+
+		m_Filedef.close();
+	}
+}
+
+std::string CFileDef::GetValidLine()
+{
+	std::string line = "";
+
+	while (m_Filedef.good() && !m_Filedef.eof())
+	{
+		std::getline(m_Filedef, line);
+
+		//Test if line is empty
+		if (line.size() >= 1)
+		{
+			if (line.at(0) == '}')
+				return line;
+		}
+
+		if (line.size() >= 2)
+		{
+			//Discard comments
+			if (line.at(0) != '#' && line.at(1) != '#')
+			{
+				return line;
+			}
+		}
+	}
+
+	return line;
+}
+
+
+/*
+	Get the name into object file
+*/
+std::string CFileDef::getObjectName()
+{
+	return m_name;
+}
+
+/* 
+	Get the value associated to key - std::string
+*/
+std::string* CFileDef::getStringObjectValues(const std::string &_key)
+{
+	std::string *res = new std::string();
+
+	for (int i = 0; i < m_numkeys; i++)
+	{
+		if (!m_keys[i].key.compare(_key))
+		{
+			return m_keys[i].values;
+		}
+	}
+
+	return res;
+}
+
+/*
+	Get the value associated to key - float
+*/
+float* CFileDef::getFloatObjectValues(const std::string &_key)
+{
+	float *res = (float*)malloc(sizeof(float) * MAX_SUBKEYS);
+
+	for (int i = 0; i < m_numkeys; i++)
+	{
+		if (!m_keys[i].key.compare(_key))
+		{
+			for (int j = 0;j<m_keys[i].n_values;j++)
+			{
+				res[j] = std::stof(m_keys[i].values[j]);
+			}
+		}
+	}
+
+	return res;
+}
+
+/*
+	Get the value associated to key - int
+*/
+int* CFileDef::getIntObjectValues(const std::string &_key)
+{
+	int *res = (int*)malloc(sizeof(int) * MAX_SUBKEYS);
+
+	for (int i = 0; i < m_numkeys; i++)
+	{
+		if (!m_keys[i].key.compare(_key))
+		{
+			for (int j = 0;j < m_keys[i].n_values;j++)
+			{
+				res[j] = std::stoi(m_keys[i].values[j]);
+			}
+		}
+	}
+
+	return res;
+}
+
+/*
+	Get the keys i
+ */
+std::string CFileDef::getObjectKey(int ind)
+{
+	if (m_keys[ind].key.length() > 0)
+	{
+		return m_keys[ind].key;
+	}
+
+	return NULL;
+}
+
+/*
+ * Get the number of total objects that share the same key
+ */
+int CFileDef::getCount(const std::string &_key)
+{
+	int count = 0;
+
+	for (int i = 0; i < m_numkeys; i++)
+	{
+		if (!m_keys[i].key.compare(_key))
+		{
+			count++;
+		}
+	}
+
+	return count;
+}
+
+std::string* CFileDef::getObjectValuesIndex(const std::string &_key, int index)
+{
+	std::string cad[100];
+	int ind = 0;
+
+	for (int i = 0; i < m_numkeys; i++)
+	{
+		if (!m_keys[i].key.compare(_key))
+		{
+			if (ind == index)
+				return m_keys[i].values;
+			ind++;
+		}
+	}
+
+	return NULL;
+}
+
