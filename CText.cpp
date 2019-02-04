@@ -89,16 +89,24 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 			//m_mvp = m_projection * m_view * m_model;
 
 			//Configure the uniform to the Uniform Buffer Object
-			const GLchar* names[3] = {"view", "projection", "model"};
-			getUBO()->uniformBlockIndex(shaderid, "Matrices");
-			getUBO()->addUniformsToUbo(shaderid, 3, names);
-			//getUBO()->copyUniformsValues(shaderid, 3, )
+			GLuint n_uniforms = 3;
+			const GLchar* names[n_uniforms] = {"view", "projection", "model"};
 
-			//Create the Uniform Buffer Object (UBO) and stores the matrices in it
-			//getUBO()->createUniformBufferObject(3 * sizeof(glm::mat4), GL_STATIC_DRAW);
-			//getUBO()->update2(0, sizeof(glm::mat4), m_view.get());
-			//getUBO()->update2(sizeof(glm::mat4), sizeof(glm::mat4), m_projection.get());
-			//getUBO()->update2(2 * sizeof(glm::mat4), sizeof(glm::mat4), m_model.get());
+			GLuint indices[n_uniforms];
+			GLint size[n_uniforms];
+			GLint offset[n_uniforms];
+			GLint type[n_uniforms];
+
+			glGetUniformIndices(shaderid, n_uniforms, names, indices);
+			glGetActiveUniformsiv(shaderid, n_uniforms, indices, GL_UNIFORM_OFFSET, offset);
+			glGetActiveUniformsiv(shaderid, n_uniforms, indices, GL_UNIFORM_SIZE, size);
+			glGetActiveUniformsiv(shaderid, n_uniforms, indices, GL_UNIFORM_TYPE, type);
+
+			memcpy(getUBO()->getBuffer() + offset[m_view], &m_view, size[m_view] )
+
+			std::cout << "\nMata";
+
+
 			//-------------------------------------------------------------------------------------------------
 
 			//VERTEX ATTRIB OBJECT

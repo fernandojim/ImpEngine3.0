@@ -62,6 +62,8 @@ namespace Engine
 			********************************************************************/
 			GLuint getUBOHandler();
 
+			GLvoid* getBuffer();
+
 		private:
 			static const GLuint max_uniforms = 10;
 

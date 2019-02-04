@@ -43,6 +43,11 @@ void CUBO::uniformBlockIndex(GLuint shader_id, const std::string& uniform)
 	}
 }
 
+GLvoid* CUBO::getBuffer()
+{
+	return m_buffer;
+}
+
 void CUBO::addUniformsToUbo(GLuint shader_id, GLuint nnames, const GLchar** uniform)
 {
 	//Add the uniforms to the Uniforms BLock
