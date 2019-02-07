@@ -67,6 +67,17 @@ namespace Engine
 			//Our opengl context handle
 			SDL_GLContext m_maincontext;
 
+			//Debugging callback
+			static void APIENTRY openglCallbackFunction(
+			  GLenum source,
+			  GLenum type,
+			  GLuint id,
+			  GLenum severity,
+			  GLsizei length,
+			  const GLchar* message,
+			  const void* userParam
+			);
+
 			//If the Manager is started OK
 			bool m_isStarted;
 
@@ -77,6 +88,7 @@ namespace Engine
 			int m_aspect;
 			bool m_bfullscreen;
 			bool m_bvsync;
+			bool m_bdebug;
 			std::string m_szName;
 		};
 	}

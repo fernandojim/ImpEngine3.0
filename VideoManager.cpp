@@ -33,6 +33,7 @@ VideoManager::VideoManager()
 	  m_aspect(0),
 	  m_bfullscreen(false),
 	  m_bvsync(false),
+	  m_bdebug(false),
 	  m_szName("")
 {
 
@@ -70,6 +71,10 @@ void VideoManager::startup()
 		//Turn on double buffering
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, m_bits);
+
+		//Turno on debugging
+		if (m_bdebug)
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
 		//Create our window centered at given position
 		m_mainwindow = SDL_CreateWindow(m_szName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -193,6 +198,35 @@ bool VideoManager::Load(const std::string& szFile)
 
 				return false;
 			}
+
+			// Debugging
+			aux = pfile->getAttributeValue("DEBUG");
+			if (aux == "N")
+			{
+				m_bdebug = false;
+				//m_debugLevel = NONE;
+			}
+			else if (aux == "Y")
+			{
+				m_bdebug = true;
+				//m_debugLevel = LOW;
+			}
+			/*else if (aux == "M")
+			{
+				m_bdebug = true;
+				m_debugLevel = MEDIUM;
+			}
+			else if (aux == "H")
+			{
+				m_bdebug = true;
+				m_debugLevel = HIGH;
+			}*/
+			else
+			{
+				Message::MessageBOX("VideoManager", "Invalid 'DEBUG' value");
+
+				return false;
+			}
 		}
 	}
 
@@ -203,10 +237,20 @@ void VideoManager::InitScene()
 {
 	glViewport(0, 0, m_width, m_height);
 
+	// Enable the debug callback
+	if (m_bdebug)
+	{
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(openglCallbackFunction, nullptr);
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
+	}
+
 	//Init OpenGL
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glEnable(GL_DEPTH_TEST);
 	glClearDepth(GL_TRUE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void VideoManager::Resize()
@@ -224,6 +268,111 @@ void VideoManager::Resize()
 	{
 		glViewport(0, 0, m_width, m_height);
 	}
+}
+
+//Debugging callback
+void APIENTRY VideoManager::openglCallbackFunction(
+			  GLenum source,
+			  GLenum type,
+			  GLuint id,
+			  GLenum severity,
+			  GLsizei length,
+			  const GLchar* message,
+			  const void* userParam
+			)
+{
+	std::string cad;
+
+	cad = cad + "\n---------------------------------------------------------------------------------------------------";
+	//Creates the message
+
+	//severity
+	cad = cad + "\nSeverity: ";
+	switch (severity)
+	{
+		case GL_DEBUG_SEVERITY_HIGH:
+			cad = cad + "High severity";
+		break;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			cad = cad + "Medium severity";
+		break;
+		case GL_DEBUG_SEVERITY_LOW:
+			cad = cad + "Low severity";
+		break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			cad = cad + "Informative";
+		break;
+		default:
+			cad = cad + "Undefined";
+		break;
+	}
+
+	//source
+	cad = cad + "\nSource is: ";
+	switch (source)
+	{
+		case GL_DEBUG_SOURCE_API:
+			cad = cad + "OpenGL API calls";
+		break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+			cad = cad + "Windows API calls";
+		break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER:
+			cad = cad + "Shader compiler";
+		break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY:
+			cad = cad + "Third party";
+		break;
+		case GL_DEBUG_SOURCE_APPLICATION:
+			cad = cad + "User";
+		break;
+		case GL_DEBUG_SOURCE_OTHER:
+			cad = cad + "Other";
+		break;
+		default:
+			cad = cad + "No source";
+		break;
+	}
+
+	//type
+	cad = cad + "\nType is: ";
+	switch (type)
+	{
+		case GL_DEBUG_TYPE_ERROR:
+			cad = cad + "From the API";
+		break;
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+			cad = cad + "Deprecated behaviour";
+		break;
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+			cad = cad + "Undefined behaviour";
+		break;
+		case GL_DEBUG_TYPE_PORTABILITY:
+			cad = cad + "Not portable";
+		break;
+		case GL_DEBUG_TYPE_PERFORMANCE:
+			cad = cad + "Performance issue";
+		break;
+		case GL_DEBUG_TYPE_MARKER:
+			cad = cad + "Command stream annotation";
+		break;
+		case GL_DEBUG_TYPE_PUSH_GROUP:
+			cad = cad + "Push group";
+		break;
+		case GL_DEBUG_TYPE_POP_GROUP:
+			cad = cad + "Pop group";
+		break;
+		case GL_DEBUG_TYPE_OTHER:
+			cad = cad + "Other";
+		break;
+		default:
+			cad = cad + "No type";
+		break;
+	}
+
+	std::cout << cad;
+	std::cout << "\n OpenGL debug message: " << message;
+	std::cout.flush();
 }
 
 void VideoManager::ViewHardwareInfo()

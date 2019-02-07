@@ -78,7 +78,7 @@ namespace Engine
 			std::shared_ptr<glm::mat4> m_projection;
 			std::shared_ptr<glm::mat4> m_model;
 			std::shared_ptr<glm::mat4> m_view;
-			std::shared_ptr<glm::mat4> m_mvp;
+			glm::mat4 m_mvp;
 
 			//Graphics
 			std::shared_ptr<Engine::Graphics::CVAO> vao; //Vertex Attrib Object
@@ -109,7 +109,7 @@ namespace Engine
 			GLuint getShaderIdByName(const std::string& sName);
 			std::string getShaderNameById(GLuint id);
 
-			void debug();
+			void debug(GLvoid *p);
 
 			static CRenderingSystem& getRenderingSystem();
 

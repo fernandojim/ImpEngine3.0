@@ -37,47 +37,53 @@ namespace Engine
 			~CUBO();
 
 		   /********************************************************************
-			* Bind the uniform to the Uniform Buffer Object
+			* Creates the Uniform Block
 			********************************************************************/
-			void uniformBlockIndex(GLuint shader_id, const std::string& uniform);
+			void createUniformBlock(GLuint program_id, const std::string& uniform_block);
 
 		   /********************************************************************
-		    * Add a name to the uniform block
+		    * Add names to the uniform block
 			********************************************************************/
-			void addUniformsToUbo(GLuint shader_id, GLuint nnames, const GLchar** uniform);
+			void addUniformNames(GLuint program_id, GLuint uniformCount, const GLchar** uniformNames);
 
 		   /********************************************************************
-			* Create and initialize the Uniform Buffer Object
+			* Create and alloc the variables to uniforms
 			********************************************************************/
-			void createUniformBufferObject(std::size_t size, GLuint usage);
+			void activeUniformiv(GLuint program_id, GLuint n, const GLvoid * data, size_t size);
+			void addData(GLuint offset, const GLvoid * data, size_t size);
 
 		   /********************************************************************
-			* Update the data to the Buffer
+			* Bind the UBO to pass to the shader program
 			********************************************************************/
-			void update(std::size_t size, const void* data);
-			void update2(GLintptr offset, GLsizeiptr size, const GLvoid* data);
+			void bindUBO();
+
+		   /********************************************************************
+			* Bind the UBO to pass to the shader program
+			********************************************************************/
+			void createUBO();
 
 		   /********************************************************************
 			* Get the Uniform Buffer Object handler
 			********************************************************************/
-			GLuint getUBOHandler();
+			GLuint& getUBOHandler();
 
-			GLvoid* getBuffer();
+		   /********************************************************************
+		    * Get the Uniform Buffer Object handler
+			********************************************************************/
+			GLubyte* getBuffer();
 
 		private:
 			static const GLuint max_uniforms = 10;
 
-			GLvoid *m_buffer;    //Buffer where is alloc the Uniform Block
+			GLubyte *m_buffer;    //Buffer where is alloc the Uniform Block
 			GLuint m_uboIndex;   //Ubo index
 			GLint  m_uboSize;    //Size of buffer
-			GLuint m_uboHandle;  //Ubo handler
+			GLuint m_uboHandler;  //Ubo handler
 			GLuint m_num_uniforms;
 
 			const GLchar* m_names[max_uniforms];
-			GLuint m_indexes[max_uniforms];
-			GLint m_sizes[max_uniforms];
+			GLuint m_indices[max_uniforms];
 			GLint m_offsets[max_uniforms];
-			GLint m_types[max_uniforms];
 
 			void clear();
 		};

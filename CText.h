@@ -33,12 +33,10 @@ namespace Engine
 
 			void setIdTexture(GLuint n, GLuint id);
 
-			void RenderText(const std::string& text);
-
-			std::shared_ptr<glm::mat4>& getProjectionMatrix();
-			std::shared_ptr<glm::mat4>& getModelMatrix();
-			std::shared_ptr<glm::mat4>& getViewMatrix();
-			std::shared_ptr<glm::mat4>& getMVPMatrix();
+			glm::mat4& getProjectionMatrix();
+			glm::mat4& getModelMatrix();
+			glm::mat4& getViewMatrix();
+			glm::mat4& getMVPMatrix();
 
 		private:
 			static const GLuint n_chars = 36;  //Num of chars
@@ -58,10 +56,10 @@ namespace Engine
 		   /********************************************************************************************
 			** Transform matrixes (only for text rendering)
 			********************************************************************************************/
-			std::shared_ptr<glm::mat4> m_projection;
-			std::shared_ptr<glm::mat4> m_model;
-			std::shared_ptr<glm::mat4> m_view;
-			std::shared_ptr<glm::mat4> m_mvp;
+			glm::mat4 m_projection;
+			glm::mat4 m_model;
+			glm::mat4 m_view;
+			glm::mat4 m_mvp;
 		};
 	}
 }

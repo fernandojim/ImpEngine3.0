@@ -12,6 +12,9 @@
 #include "CXMLParser.h"
 #include "CText.h"
 
+#include "glm\glm.hpp"
+#include "glm\gtc\type_ptr.hpp"
+
 using namespace Engine::System;
 
 GLuint CRenderingSystem::shader_id = 0;
@@ -124,9 +127,10 @@ void CRenderingSystem::RegisterRenderingComponent(const std::shared_ptr<Engine::
 
 	if ( rendercomp->getRenderingComponentType() == Engine::Component::renderingComponentType::TEXT_MESH )
 	{
-		r.m_projection = (std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getProjectionMatrix();
-		r.m_model = (std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getModelMatrix();
-		r.m_view = (std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getViewMatrix();
+		r.m_projection = std::make_shared<glm::mat4>((std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getProjectionMatrix());
+		r.m_model = std::make_shared<glm::mat4>((std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getModelMatrix());
+		r.m_view = std::make_shared<glm::mat4>((std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getViewMatrix());
+		r.m_mvp = (std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getMVPMatrix();
 		r.programID = rendercomp->getShaderProgramId();
 		r.typ = rendercomp->getRenderingComponentType();
 		r.vao = rendercomp->getVAO();
@@ -181,9 +185,6 @@ void CRenderingSystem::Render()
 	 *
 	 */
 
-	GLuint uboIndex = 0;
-	GLint size = 0;
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    /********************************************************
@@ -198,40 +199,28 @@ void CRenderingSystem::Render()
 
 		if (i.typ == Engine::Component::renderingComponentType::TEXT_MESH)
 		{
-			//Get the id of the Uniform Block structure in the shader
-			uboIndex = glGetUniformBlockIndex(i.programID, "Matrices");
+			//Activate the uniforms or uniform block
+			//i.ubo->bindUBO();
 
-			//Get its size
-			glGetActiveUniformBlockiv(i.programID, uboIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &size);
-
-			glm::mat4 *mv = (i.m_view.get());
-			glm::mat4 *mp = (i.m_projection.get());
-			glm::mat4 *mm = (i.m_model.get());
-
-			i.ubo->update2(0, sizeof(glm::mat4), mv);
-			i.ubo->update2(sizeof(glm::mat4), sizeof(glm::mat4), mp);
-			i.ubo->update2(2 * sizeof(glm::mat4), sizeof(glm::mat4), mm);
-
-			//i.ubo->update2(0, sizeof(glm::mat4), i.m_view.get());
-			//i.ubo->update2(sizeof(glm::mat4), sizeof(glm::mat4), i.m_projection.get());
-			//i.ubo->update2(2 * sizeof(glm::mat4), sizeof(glm::mat4), i.m_model.get());
-
-			GLuint ret = glGetUniformLocation(i.programID, "texturaA");
+			//Get the texture
+			GLint ret = glGetUniformLocation(i.programID, "texturaA");
 			glUniform1i(ret, 1);
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, 1);
 
-			//glDrawElements(GL_TRIANGLE_STRIP, i.vao->getNumVertex(), GL_UNSIGNED_INT, i.vao->getvIndex().data());
+			//Matrix de transformación
+			GLint base = glGetUniformLocation(i.programID, "mvp");
+			glUniformMatrix4fv(base, 1, GL_FALSE, glm::value_ptr(i.m_mvp));
+
 			glBindVertexArray(i.vao->getHandler());
-			glDrawElements(GL_TRIANGLE_STRIP, 12, GL_UNSIGNED_INT, i.vao->getvIndex().data());
-
-					/*Engine::Managers::GameManager::getGameManagerInstance().getsFPS()
-					+ " Fps"
-					+ "<"
-					+ (char*)glGetString(GL_VERSION)
-					+ "<"
-					+ (char*)glGetString(GL_VENDOR));*/
-
+			GLint offset,size = 8;
+			for (GLuint c = 0 ; c < 3 ; c++)
+			{
+				offset = size * c;
+				debug(&(i.vao->getvIndex())[offset]);
+				glDrawElements(GL_TRIANGLE_STRIP, size, GL_UNSIGNED_INT, &(i.vao->getvIndex())[offset]);
+			}
+			glBindVertexArray(0);
 		}
 
 		break;
@@ -265,13 +254,18 @@ void CRenderingSystem::release()
 	m_RenderingComponentList2.clear();
 }
 
-void CRenderingSystem::debug()
+void CRenderingSystem::debug(GLvoid *p)
 {
 	for (auto i : m_RenderingComponentList)
 		std::cout << "\n NAME='" +
 		             i->getName() +
 					 "'" +
 					 " SHADER='"+ getShaderNameById(i->getShaderProgramId()) + "'";
+
+	std::vector<GLuint> vuc(static_cast<GLuint*>(p), static_cast<GLuint*>(p) + 8);
+
+	for (auto x : vuc)
+		std::cout << "," << x;
 
 	std::cout.flush();
 }

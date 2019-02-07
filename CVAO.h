@@ -98,6 +98,7 @@ namespace Engine
 			GLuint*  getv1Index();
 
 			void setNumVertex(GLuint n);
+			void setNumTexel(GLuint n);
 			void setNumIndex(GLuint n);
 
 			//Adding methods
@@ -124,6 +125,7 @@ namespace Engine
 			* Buffers and their sizes to store in the graphics card to pass to the shaders
 			********************************************************************************************/
 			GLuint m_numVertex;
+			GLuint m_numTexel;
 			GLuint m_numIndex;
 
 			//Std vectors

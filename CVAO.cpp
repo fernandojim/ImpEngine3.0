@@ -116,6 +116,11 @@ void CVAO::setNumVertex(GLuint n)
 	m_numVertex = n;
 }
 
+void CVAO::setNumTexel(GLuint n)
+{
+	m_numTexel = n;
+}
+
 void CVAO::setNumIndex(GLuint n)
 {
 	m_numIndex = n;
@@ -196,4 +201,5 @@ void CVAO::debug()
 	{
 		std::cout << "(" << i.x << "," << i.y << ")";
 	}
+	std::cout.flush();
 }
