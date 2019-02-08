@@ -35,6 +35,7 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 			size = (m_gridHeight + 1) * (m_gridWidth + 1);
 			getVAO()->setNumVertex(size);
 			getVAO()->setNumTexel(size);
+			getVAO()->setNumSubIndex((m_gridWidth + 1) * 2);
 			getVAO()->getvVertex().reserve(size);
 			getVAO()->getvTexel().reserve(size);
 
@@ -53,26 +54,21 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 			}
 
 			/*It´s time to create the index to referenciate the vertexs
-			1   3
-			|\  |
-			^ \	^ ...
-			|  \|
-			0   2
+			1---3---4
+			|\  |\  |
+			^ \	^ \ ^
+			|  \|   |
+			0---2---5
+			Type: GL_TRIANGLE_STRIP
 			*/
-			for (y = m_gridHeight - 1;y >= 0;y--)
+			for (y = m_gridHeight-1;y >= 0;y--)
 			{
-				for (x = 0; x < m_gridWidth; x++)
+				for (x = 0; x <= m_gridWidth; x++)
 				{
 					index = y + (x * (m_gridHeight + 1));
 					getVAO()->addIndex(index);
 
 					index = (y + 1) + (x * (m_gridHeight + 1));
-					getVAO()->addIndex(index);
-
-					index = y + ((x + 1) * (m_gridHeight + 1));
-					getVAO()->addIndex(index);
-
-					index = (y + 1) + ((x + 1) * (m_gridHeight + 1));
 					getVAO()->addIndex(index);
 				}
 			}
@@ -80,9 +76,9 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 			//VERTEX ATTRIB OBJECT
 			//Create the vertex and texel array buffers
 			getVAO()->CreateArrayBuffer(getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
-			getVAO()->CreateAttribArrayBuffer(3, 3);
+			getVAO()->CreateAttribArrayBuffer(0, 3);
 			getVAO()->CreateArrayBuffer(getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(glm::vec2), GL_STATIC_DRAW);
-			getVAO()->CreateAttribArrayBuffer(4, 2);
+			getVAO()->CreateAttribArrayBuffer(1, 2);
 
 			//UNIFORM BUFFER OBJECT
 			//-------------------------------------------------------------------------------------------------
@@ -92,23 +88,13 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 			m_view = glm::lookAt(glm::vec3(0.0, 0.0, 90.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 			m_projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 100.0f, -100.0f);
 			m_model = glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0));
-			m_mvp = m_projection * m_view * m_model;
+			//m_mvp = m_projection * m_view * m_model;
 
 			//Configure the uniform to the Uniform Buffer Object
-			//-------------------------------------------------------------------------------------------------
-			/*GLuint n_uniforms = 3;
-			const GLchar* names[n_uniforms] = {"view", "projection", "model"};
-
 			getUBO()->createUniformBlock(shaderid, "Matrices");
-			//getUBO()->addUniformNames(shaderid, n_uniforms, names);
-			//getUBO()->activeUniformiv(shaderid, 0, glm::value_ptr(m_view), sizeof(m_view));
-			//getUBO()->activeUniformiv(shaderid, 1, glm::value_ptr(m_projection), sizeof(m_projection));
-			//getUBO()->activeUniformiv(shaderid, 2, glm::value_ptr(m_model), sizeof(m_model));
-			//getUBO()->createUBO();
-
 			getUBO()->addData(0, glm::value_ptr(m_view), sizeof(glm::mat4));
 			getUBO()->addData(sizeof(glm::mat4), glm::value_ptr(m_projection), sizeof(glm::mat4));
-			getUBO()->addData(2 * sizeof(glm::mat4), glm::value_ptr(m_model), sizeof(glm::mat4));*/
+			getUBO()->addData(2 * sizeof(glm::mat4), glm::value_ptr(m_model), sizeof(glm::mat4));
 
 			//-------------------------------------------------------------------------------------------------
 

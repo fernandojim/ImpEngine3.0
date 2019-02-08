@@ -44,9 +44,6 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 		/* Load the materials from file */
 		Engine::Managers::MaterialManager::getSingleton().loadMaterialsFromMTL(m_materialsName);
 
-		std::cout << "\nTERRAIN: post materials";
-		std::cout.flush();
-
 		/* Store the materials loadad into terrain data */
 		//m_MatSand = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("sand")));
 		//m_MatGrass = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("grass")));
@@ -134,17 +131,14 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 		}
 
 		//Crea los buffers del objeto VAO
-		getVAO()->CreateArrayBuffer(getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(float) * 3, GL_STATIC_DRAW);
-		getVAO()->CreateAttribArrayBuffer(0, 3);
+		getVAO()->CreateArrayBuffer(getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
+		getVAO()->CreateAttribArrayBuffer(2, 3);
 
-		getVAO()->CreateArrayBuffer(getVAO()->getvNormal().data(), getVAO()->getvNormal().size() * sizeof(float) * 3, GL_STATIC_DRAW);
-		getVAO()->CreateAttribArrayBuffer(1, 3);
+		getVAO()->CreateArrayBuffer(getVAO()->getvNormal().data(), getVAO()->getvNormal().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
+		getVAO()->CreateAttribArrayBuffer(3, 3);
 
-		getVAO()->CreateArrayBuffer(getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(float) * 2, GL_STATIC_DRAW);
-		getVAO()->CreateAttribArrayBuffer(2, 2);
-
-		std::cout << "\nCreated terrain VAO=" << getVAO()->getVaoHandler();
-		std::cout.flush();
+		getVAO()->CreateArrayBuffer(getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(glm::vec2), GL_STATIC_DRAW);
+		getVAO()->CreateAttribArrayBuffer(4, 2);
 	}
 }
 

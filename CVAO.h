@@ -83,6 +83,7 @@ namespace Engine
 			GLuint getVaoHandler();
 			GLuint getNumVertex();
 			GLuint getNumIndex();
+			GLuint getNumSubIndex();
 
 			//Getters (Despite the rvalue functions)
 			std::vector<glm::vec3>& getvVertex();
@@ -100,16 +101,13 @@ namespace Engine
 			void setNumVertex(GLuint n);
 			void setNumTexel(GLuint n);
 			void setNumIndex(GLuint n);
+			void setNumSubIndex(GLuint n);
 
 			//Adding methods
 			void addVertex(const glm::vec3 v);
 			void addNormal(const glm::vec3 n);
 			void addTexel(const glm::vec2 t);
 			void addIndex(GLuint i);
-
-			void addv3Vertex(const vector3 v);
-			void addv3Normal(const vector3 n);
-			void addv2Texel(const vector2 t);
 
 			GLuint getVBOHandesAt(GLuint buffer_id);
 
@@ -127,6 +125,7 @@ namespace Engine
 			GLuint m_numVertex;
 			GLuint m_numTexel;
 			GLuint m_numIndex;
+			GLuint m_numSubIndex; //Each itteration using GL_TRIANGLE_STRIP (for grids)
 
 			//Std vectors
 			std::vector<GLuint>    m_Index;

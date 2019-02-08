@@ -1,0 +1,14 @@
+#version 440 core
+
+out vec4 vFragColor;
+in vec2 varyingTexel;
+
+uniform sampler2D texturaA;
+
+void main()
+{
+	vFragColor = texture(texturaA, varyingTexel);
+		
+	if ( vFragColor.rgb == vec3(0.0, 0.0, 0.0) )
+		discard;
+}

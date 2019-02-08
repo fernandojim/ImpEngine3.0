@@ -1,0 +1,39 @@
+#version 440 core
+
+layout (location = 3) in vec3 Vertex;
+layout (location = 4) in vec3 Normal;
+layout (location = 5) in vec2 Texel;
+
+layout (std140) uniform Matrices
+{
+	mat3 m3normal;
+	mat4 m4modelview;
+	mat4 m4mvp;
+};
+
+//uniform mat3 m3normal;    //Normal matrix
+//uniform mat4 m4modelview; //Model-view matrix
+//uniform mat4 m4mvp;       //Model View Projection matrix
+
+out float altura;
+
+out vec2 texCoord;
+smooth out vec3 eyeCoord;
+smooth out vec3 eyeNormal;
+
+out vec3 world_coord;
+out vec3 world_normal;
+
+void main()
+{
+	eyeNormal = m3normal * Normal;
+    eyeCoord = vec3(m4modelview * vec4(Vertex, 1.0));
+           
+	texCoord = Texel;
+	altura = Vertex.y;
+	
+	world_coord = Vertex;
+	world_normal = Normal;
+
+	gl_Position =  m4mvp * vec4(Vertex, 1.0);
+}

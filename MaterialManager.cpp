@@ -166,14 +166,8 @@ void MaterialManager::loadMaterialsFromMTL(const std::string& sMTLName)
 							}
 							else if (!line.compare(0, SZ_MAPKD, "map_Kd"))
 							{
-								std::cout << "\nMaterialManager: map_Kd='" << mat_name << "'";
-								std::cout.flush();
-
 								pMaterial->m_sMap_kd = line.substr(7, line.length());
 								pMaterial->m_iMap_kd_texture = Engine::Managers::TextureManager::getSingleton().loadTexture(pMaterial->m_sMap_kd);
-
-								std::cout << "\nMaterialManager: map_Kd OK";
-								std::cout.flush();
 							}
 							else if (!line.compare(0, SZ_MAPKS, "map_Ks"))
 							{
@@ -185,8 +179,6 @@ void MaterialManager::loadMaterialsFromMTL(const std::string& sMTLName)
 
 						//Add the new material
 						m_Materials.insert(std::pair < std::string, std::shared_ptr<Engine::Graphics::CMaterial> >(mat_name, pMaterial));
-						std::cout << "\nMaterialManager: insert";
-						std::cout.flush();
 					}
 				}
 			}

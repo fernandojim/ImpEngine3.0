@@ -29,6 +29,7 @@ void CVAO::Clear()
 {
 	m_numVertex = 0;
 	m_numIndex = 0;
+	m_numSubIndex = 0;
 	m_Index.clear();
 	m_Vertex.clear();
 	m_Normal.clear();
@@ -84,6 +85,16 @@ GLuint CVAO::getNumVertex()
 GLuint CVAO::getNumIndex()
 {
 	return m_numIndex;
+}
+
+GLuint CVAO::getNumSubIndex()
+{
+	return m_numSubIndex;
+}
+
+void CVAO::setNumSubIndex(GLuint n)
+{
+	m_numSubIndex = n;
 }
 
 std::vector<glm::vec3>& CVAO::getvVertex()
@@ -164,21 +175,6 @@ vector2* CVAO::getv2Texel()
 GLuint*  CVAO::getv1Index()
 {
 	return m_iuIndex;
-}
-
-void CVAO::addv3Vertex(const vector3 v)
-{
-
-}
-
-void CVAO::addv3Normal(const vector3 n)
-{
-
-}
-
-void CVAO::addv2Texel(const vector2 t)
-{
-
 }
 
 GLuint CVAO::getVBOHandesAt(GLuint buffer_id)

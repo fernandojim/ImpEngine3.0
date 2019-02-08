@@ -135,6 +135,9 @@ void CRenderingSystem::RegisterRenderingComponent(const std::shared_ptr<Engine::
 		r.typ = rendercomp->getRenderingComponentType();
 		r.vao = rendercomp->getVAO();
 		r.ubo = rendercomp->getUBO();
+
+		//Add the render struct to the list
+		m_RenderingComponentList2.push_back(r);
 	}
 	else
 	{
@@ -144,8 +147,7 @@ void CRenderingSystem::RegisterRenderingComponent(const std::shared_ptr<Engine::
 		r.ubo = rendercomp->getUBO();
 	}
 
-	//Add the render struct to the list
-	m_RenderingComponentList2.push_back(r);
+
 
 	//Sort the rendering component list from shader id
 	std::sort(m_RenderingComponentList2.begin(), m_RenderingComponentList2.end(), [](const _renderer& first, const _renderer& second)
@@ -195,12 +197,9 @@ void CRenderingSystem::Render()
 	for (auto i : m_RenderingComponentList2)
 	{
 		//glUseProgram(m_shaderListProgramIds[i]);
-		glUseProgram(i.programID);
-
 		if (i.typ == Engine::Component::renderingComponentType::TEXT_MESH)
 		{
-			//Activate the uniforms or uniform block
-			//i.ubo->bindUBO();
+			glUseProgram(i.programID);
 
 			//Get the texture
 			GLint ret = glGetUniformLocation(i.programID, "texturaA");
@@ -208,22 +207,20 @@ void CRenderingSystem::Render()
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, 1);
 
-			//Matrix de transformación
-			GLint base = glGetUniformLocation(i.programID, "mvp");
-			glUniformMatrix4fv(base, 1, GL_FALSE, glm::value_ptr(i.m_mvp));
-
 			glBindVertexArray(i.vao->getHandler());
-			GLint offset,size = 8;
-			for (GLuint c = 0 ; c < 3 ; c++)
+			GLint offset = 0;
+			GLint size = 10;
+			for (GLuint c = 0 ; c < 4 ; c++)
 			{
-				offset = size * c;
-				debug(&(i.vao->getvIndex())[offset]);
+				offset = c * size;
 				glDrawElements(GL_TRIANGLE_STRIP, size, GL_UNSIGNED_INT, &(i.vao->getvIndex())[offset]);
 			}
+
 			glBindVertexArray(0);
+			glUseProgram(0);
 		}
 
-		break;
+		//break;
 
 		/*if (rc->getRenderingComponentType() == Engine::Component::renderingComponentType::TERRAIN_MESH)
 		{
@@ -256,13 +253,7 @@ void CRenderingSystem::release()
 
 void CRenderingSystem::debug(GLvoid *p)
 {
-	for (auto i : m_RenderingComponentList)
-		std::cout << "\n NAME='" +
-		             i->getName() +
-					 "'" +
-					 " SHADER='"+ getShaderNameById(i->getShaderProgramId()) + "'";
-
-	std::vector<GLuint> vuc(static_cast<GLuint*>(p), static_cast<GLuint*>(p) + 8);
+	std::vector<GLuint> vuc(static_cast<GLuint*>(p), static_cast<GLuint*>(p) + 24);
 
 	for (auto x : vuc)
 		std::cout << "," << x;
