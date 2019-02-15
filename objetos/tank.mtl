@@ -1,0 +1,12 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl warrior
+Ns 96.078431
+Ka 0.900000 0.900000 0.900000
+Kd 0.153725 0.379608 0.436078
+Ks 0.449020 0.449020 0.449020
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd texturas\warrior.bmp

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GAMEOBJECTS>
+	<GAMEOBJECT name="text">
+		<PARENT></PARENT>
+		<LAYER>0</LAYER>
+	</GAMEOBJECT>
+	<GAMEOBJECT name="camera">
+		<PARENT></PARENT>
+		<LAYER>0</LAYER>
+	</GAMEOBJECT>
+	<GAMEOBJECT name="terrain">
+		<PARENT></PARENT>
+		<LAYER>0</LAYER>
+	</GAMEOBJECT>
+	<GAMEOBJECT name="rock1">
+		<PARENT>terrain</PARENT>
+		<LAYER>1</LAYER>
+	</GAMEOBJECT>
+</GAMEOBJECTS>

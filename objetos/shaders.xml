@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SHADERS>
+	<SHADER name="text">
+		<VSHADER>shaders\\text.vertex</VSHADER>
+		<FSHADER>shaders\\text.fragment</FSHADER>
+	</SHADER>
+	<SHADER name="terrain">
+		<VSHADER>shaders\\terrain.vertex</VSHADER>
+		<FSHADER>shaders\\terrain.fragment</FSHADER>
+	</SHADER>
+	<SHADER name="mesh">
+		<VSHADER>shaders\\mesh.vertex</VSHADER>
+		<FSHADER>shaders\\mesh.fragment</FSHADER>
+	</SHADER>
+</SHADERS>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<COMPONENTS>
+	<COMPONENT name="text_rendering_component">
+		<GAMEOBJECT>text</GAMEOBJECT>
+		<TYPE>RENDERING</TYPE>
+		<MESH_TYPE>TEXT_MESH</MESH_TYPE>
+		<SHADER>text</SHADER>
+		<FILE>objetos\\text.xml</FILE>
+	</COMPONENT>
+	<COMPONENT name="camera_transform_component">
+		<GAMEOBJECT>camera</GAMEOBJECT>
+		<TYPE>TRANSFORM</TYPE>
+		<POSITION>10.0,50.0,10.0</POSITION>
+		<SCALE>1.0,1.0,1.0</SCALE>
+	</COMPONENT>
+	<COMPONENT name="terrain_rendering_component">
+		<GAMEOBJECT>terrain</GAMEOBJECT>
+		<TYPE>RENDERING</TYPE>
+		<MESH_TYPE>TERRAIN_MESH</MESH_TYPE>
+		<SHADER>terrain</SHADER>
+		<FILE>objetos\\terrain.xml</FILE>
+	</COMPONENT>
+	<COMPONENT name="terrain_transform_component">
+		<GAMEOBJECT>terrain</GAMEOBJECT>
+		<TYPE>TRANSFORM</TYPE>
+		<POSITION>10.0,10.0,10.0</POSITION>
+		<SCALE>1.0,1.0,1.0</SCALE>
+	</COMPONENT>
+	<COMPONENT name="rock1_rendering_component">
+		<GAMEOBJECT>rock1</GAMEOBJECT>
+		<TYPE>RENDERING</TYPE>
+		<MESH_TYPE>BLENDER_MESH</MESH_TYPE>
+		<SHADER>mesh</SHADER>
+		<FILE>objetos\\rock.obj</FILE>
+	</COMPONENT>
+	<COMPONENT name="rock1_transform_component">
+		<GAMEOBJECT>rock1</GAMEOBJECT>
+		<TYPE>TRANSFORM</TYPE>
+		<POSITION>10.0,10.0,10.0</POSITION>
+		<SCALE>1.0,1.0,1.0</SCALE>
+	</COMPONENT>
+</COMPONENTS>
