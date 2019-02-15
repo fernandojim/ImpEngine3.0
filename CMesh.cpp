@@ -51,20 +51,15 @@ bool CMesh::load(const std::string& file)
 		/* Create VAO with the vertex arrays loaded */
 		if (getVAO()->getNumVertex() > 0)
 		{
-			getVAO()->CreateArrayBuffer(&getVAO()->getvVertex()[0], getVAO()->getNumVertex() * sizeof(float) * 3, GL_STATIC_DRAW);
-			getVAO()->CreateAttribArrayBuffer(5, 3);
+			getVAO()->CreateVertexArrays();
+
+			getVAO()->CreateAttribArrayBuffer(5, 3, &getVAO()->getvVertex()[0], getVAO()->getNumVertex() * sizeof(float) * 3, GL_STATIC_DRAW);
+
+			if (getVAO()->getvNormal().size() > 0)
+				getVAO()->CreateAttribArrayBuffer(6, 3, &getVAO()->getvNormal()[0], getVAO()->getNumVertex() * sizeof(float) * 3, GL_STATIC_DRAW);
 
 			if (getVAO()->getvTexel().size() > 0)
-			{
-				getVAO()->CreateArrayBuffer(&getVAO()->getvTexel()[0], getVAO()->getNumVertex() * sizeof(float) * 2, GL_STATIC_DRAW);
-				getVAO()->CreateAttribArrayBuffer(6, 2);
-			}
-			
-			if (getVAO()->getvNormal().size() > 0)
-			{
-				getVAO()->CreateArrayBuffer(&getVAO()->getvNormal()[0], getVAO()->getNumVertex() * sizeof(float) * 3, GL_STATIC_DRAW);
-				getVAO()->CreateAttribArrayBuffer(7, 3);
-			}
+				getVAO()->CreateAttribArrayBuffer(7, 2, &getVAO()->getvTexel()[0], getVAO()->getNumVertex() * sizeof(float) * 2, GL_STATIC_DRAW);
 		}
 		else
 		{

@@ -31,17 +31,20 @@ namespace Engine
 			CText(const std::string& name, GLuint shaderid, const std::string& file);
 			~CText();
 
-			void setIdTexture(GLuint n, GLuint id);
+			void text(const std::string& tx);
 
-			glm::mat4& getProjectionMatrix();
-			glm::mat4& getModelMatrix();
-			glm::mat4& getViewMatrix();
-			glm::mat4& getMVPMatrix();
+			void setIdTexture(GLuint id);
 
 		private:
+			bool loadValues(const std::string& file);
+
 			static const GLuint n_chars = 36;  //Num of chars
 			std::string m_text;                //Text to render
-			GLuint      m_uiTextura[n_chars];  //Texture id´s A to Z and 0 to 9 texture chars
+			GLuint      m_uiFontsTexture;      //Texture id where is painted the characters
+
+			std::vector<GLuint>	m_charCodes;
+
+			void calculateTextureCoordinates();
 
 		   /********************************************************************************************
 			** Screen values of the cell to draw a character and its grid
@@ -50,16 +53,18 @@ namespace Engine
 			GLint m_gridHeight;
 			GLint m_gridWidth;
 
-			std::string m_textureA;
-			std::string m_textureB;
+			std::string m_textureFonts;
+
+			GLint m_textureFontsGridX;
+			GLint m_textureFontsGridY;
+			GLint m_fontPixelsX;
+			GLint m_fontPixelsY;
 
 		   /********************************************************************************************
-			** Transform matrixes (only for text rendering)
+			** Texture coordinates for rendering the characters
 			********************************************************************************************/
-			glm::mat4 m_projection;
-			glm::mat4 m_model;
-			glm::mat4 m_view;
-			glm::mat4 m_mvp;
+			std::vector<Engine::Graphics::vector2> m_charTextures;
+
 		};
 	}
 }

@@ -13,6 +13,8 @@
 #include <iostream>
 #include <memory>
 
+#include "glm\glm.hpp"
+
 #include "CComponent.h"
 #include "CVAO.h"
 #include "CUBO.h"
@@ -48,6 +50,14 @@ namespace Engine
 			std::shared_ptr<Engine::Graphics::CVAO>& getVAO();
 			std::shared_ptr<Engine::Graphics::CUBO>& getUBO();
 
+		   /************************************************
+			** Transform matrixes (public properties)
+			************************************************/
+			glm::mat4 m_projection;
+			glm::mat4 m_model;
+			glm::mat4 m_view;
+			glm::mat4 m_mvp;
+
 		private:
 			//The type of rendering component
 			renderingComponentType m_renderingComponentType;
@@ -55,7 +65,7 @@ namespace Engine
 			//The shader id for rendering
 			GLuint m_shaderProgramId;
 
-			//Vertex Attrib Object
+		  	//Vertex Attrib Object
 			std::shared_ptr<Engine::Graphics::CVAO> m_vao;
 
 			//Uniforms Buffer Object

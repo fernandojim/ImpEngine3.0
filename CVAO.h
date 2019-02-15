@@ -44,6 +44,19 @@ namespace Engine
 			GLfloat z;
 		};
 
+		/*
+		 * 3 float to vertex
+		 * 3 float to normal
+		 * 2 float to texel
+		 * Total: 32 bytes
+		 */
+		struct Vextex3V3N2NP
+		{
+			vector3 vertex;
+			vector3 normal;
+			vector2 texel;
+		};
+
 		struct face
 		{
 			GLuint nverts;
@@ -65,25 +78,36 @@ namespace Engine
 			void Clear();
 
 		   /********************************************************************************************
-			* Creates an Array Buffer
-			* That´s it a buffer for vertex, texels, etc... an its type of usage (GL_STATIC_DRAW...)
+			* Creates the id for the Arrays
 			********************************************************************************************/
-			void CreateArrayBuffer(void *buffer, GLuint size, GLenum usage);
+			void CreateVertexArrays();
 
 		   /********************************************************************************************
-			* Creates an Attrib to Array Buffer
+			* Creates the Array Buffer
+			********************************************************************************************/
+			void CreateArrayBuffer(GLvoid *buffer, GLuint size, GLenum usage);
+
+			void CreateVertexAttribPointer(GLuint program_id, const std::string& attrib_name, GLuint elements, size_t sz, GLuint offset);
+
+		   /********************************************************************************************
+			* Creates an Attrib to given Array Buffer
 			* That depends on the shader layout location for that array (attrib_id)
 			********************************************************************************************/
-			void CreateAttribArrayBuffer(GLuint attrib_id, GLuint elements);
+			void CreateAttribArrayBuffer(GLuint attrib_id, GLuint elements, void *buffer, GLuint size, GLenum usage);
 
 		   /********************************************************************************************
 			* Get/set methods for the internal info
 			********************************************************************************************/
-			GLuint getHandler();
-			GLuint getVaoHandler();
-			GLuint getNumVertex();
-			GLuint getNumIndex();
-			GLuint getNumSubIndex();
+			GLuint getVaoHandler(); //VAO handler
+			GLuint getNumVertex();  //Num vertex
+			GLuint getNumIndex();   //Num index
+			GLuint getOffset();     //Offsets to render
+			GLuint getElements();   //Elements to render
+
+			void setNumVertex(GLuint n);
+			void setNumIndex(GLuint n);
+			void setOffset(GLuint n);
+			void setElements(GLuint n);
 
 			//Getters (Despite the rvalue functions)
 			std::vector<glm::vec3>& getvVertex();
@@ -92,16 +116,8 @@ namespace Engine
 			std::vector<face>& getvFace();
 			std::vector<GLuint>& getvIndex();
 
-			//Setters for user types instead of glm::vecX
-			vector3* getv3Vertex();
-			vector3* getv3Normal();
-			vector2* getv2Texel();
-			GLuint*  getv1Index();
-
-			void setNumVertex(GLuint n);
-			void setNumTexel(GLuint n);
-			void setNumIndex(GLuint n);
-			void setNumSubIndex(GLuint n);
+			//Get the Vextex3V3N2NP array
+			std::vector<Vextex3V3N2NP>& getvVextex3V3N2NP();
 
 			//Adding methods
 			void addVertex(const glm::vec3 v);
@@ -109,23 +125,23 @@ namespace Engine
 			void addTexel(const glm::vec2 t);
 			void addIndex(GLuint i);
 
+			//Add an element to the Vextex3V3N2NP array
+			void addVextex3V3N2NP(const Vextex3V3N2NP& v);
+
 			GLuint getVBOHandesAt(GLuint buffer_id);
 
 			void debug();
 
 		private:
 		   /********************************************************************************************
-			* Creates the id for the Arrays
-			********************************************************************************************/
-			void CreateVertexArrays();
-
-		   /********************************************************************************************
 			* Buffers and their sizes to store in the graphics card to pass to the shaders
 			********************************************************************************************/
 			GLuint m_numVertex;
-			GLuint m_numTexel;
 			GLuint m_numIndex;
-			GLuint m_numSubIndex; //Each itteration using GL_TRIANGLE_STRIP (for grids)
+
+			//Itterations using GL_TRIANGLE_STRIP (for grids)
+			GLuint m_elements;    //Elements per draw command
+			GLuint m_offset;      //offset to apply
 
 			//Std vectors
 			std::vector<GLuint>    m_Index;
@@ -134,16 +150,13 @@ namespace Engine
 			std::vector<glm::vec2> m_Texel;
 			std::vector<face>      m_Faces;
 
-			//User types instead of glm::vecX
-			GLuint                *m_iuIndex;
-			vector3				  *m_v3Vertex;
-			vector3				  *m_v3Normal;
-			vector2				  *m_v2Texel;
+			//Vertex with vertex, normal and texel information
+			std::vector<Vextex3V3N2NP> m_Vextex3V3N2NP;
 
 		   /********************************************************************************************
 			* Handlers for both to manage the VAO and its buffers
 			********************************************************************************************/
-			GLuint m_handler;
+			GLuint m_arrayhandler;
 			GLuint m_vaoHandle;
 			static const int MaxBuffers = 6;
 			GLuint m_vboHandles[MaxBuffers];

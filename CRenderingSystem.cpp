@@ -1,9 +1,11 @@
-/*
- * CRenderingSystem.cpp
- *
- *  Created on: 20 de nov. de 2017
- *      Author: fjimartinez
- */
+/*****************************************
+  File:       CRenderingSystem.h
+  Purpose:    The rendering system class
+  class name: CRenderingSystem
+  ---------------------------------------
+  @Author: Yo
+  @Version: 0
+ *****************************************/
 
 #include <algorithm>
 
@@ -11,6 +13,7 @@
 #include "CRenderingSystem.h"
 #include "CXMLParser.h"
 #include "CText.h"
+#include "utils.h"
 
 #include "glm\glm.hpp"
 #include "glm\gtc\type_ptr.hpp"
@@ -71,13 +74,18 @@ void CRenderingSystem::loadShaders(const std::string& sShaders)
 			//Creates the shader
 			shader = std::make_shared<Engine::Graphics::CShader>(name, vshader.c_str(), fshader.c_str());
 
-			//Add shader to list
-			m_Shaders.insert(std::pair < GLuint, std::shared_ptr<Engine::Graphics::CShader> >(shader->getProgramId(), shader));
+			if (shader->getError() == Engine::Graphics::NO_ERR)
+			{
+				//Add shader to list
+				m_Shaders.insert(std::pair < GLuint, std::shared_ptr<Engine::Graphics::CShader> >(shader->getProgramId(), shader));
 
-			//Get its program id and store in the list of program ids
-			m_shaderListProgramIds[CRenderingSystem::shader_id++] = shader->getProgramId();
+				//Get its program id and store in the list of program ids
+				m_shaderListProgramIds[CRenderingSystem::shader_id++] = shader->getProgramId();
 
-			m_uiShaders++;
+				m_uiShaders++;
+			}
+			else
+				Message::MessageBOX("RenderingSystem", "Shader not valid: '" + name + "'");
 
 			//Next node
 			pfile->Next();
@@ -122,15 +130,16 @@ void CRenderingSystem::RegisterRenderingComponent(const std::shared_ptr<Engine::
 	//Adds the object to the rendering list
 	m_RenderingComponentList.push_back(rendercomp);
 
-	//Creates the renderer structure
+	//Gets the renderering structure
 	_renderer r;
 
-	if ( rendercomp->getRenderingComponentType() == Engine::Component::renderingComponentType::TEXT_MESH )
+	if (( rendercomp->getRenderingComponentType() == Engine::Component::renderingComponentType::TEXT_MESH ) ||
+		( rendercomp->getRenderingComponentType() == Engine::Component::renderingComponentType::TERRAIN_MESH))
 	{
-		r.m_projection = std::make_shared<glm::mat4>((std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getProjectionMatrix());
-		r.m_model = std::make_shared<glm::mat4>((std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getModelMatrix());
-		r.m_view = std::make_shared<glm::mat4>((std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getViewMatrix());
-		r.m_mvp = (std::static_pointer_cast<Engine::Graphics::CText>(rendercomp))->getMVPMatrix();
+		r.m_projection = rendercomp->m_projection;
+		r.m_model = rendercomp->m_model;
+		r.m_view = rendercomp->m_view;
+		r.m_mvp = rendercomp->m_mvp;
 		r.programID = rendercomp->getShaderProgramId();
 		r.typ = rendercomp->getRenderingComponentType();
 		r.vao = rendercomp->getVAO();
@@ -139,15 +148,6 @@ void CRenderingSystem::RegisterRenderingComponent(const std::shared_ptr<Engine::
 		//Add the render struct to the list
 		m_RenderingComponentList2.push_back(r);
 	}
-	else
-	{
-		r.programID = rendercomp->getShaderProgramId();
-		r.typ = rendercomp->getRenderingComponentType();
-		r.vao = rendercomp->getVAO();
-		r.ubo = rendercomp->getUBO();
-	}
-
-
 
 	//Sort the rendering component list from shader id
 	std::sort(m_RenderingComponentList2.begin(), m_RenderingComponentList2.end(), [](const _renderer& first, const _renderer& second)
@@ -201,26 +201,28 @@ void CRenderingSystem::Render()
 		{
 			glUseProgram(i.programID);
 
+			//glUniformBlockBinding(i.programID, i.ubo->getUboIndex(), 0);
+
 			//Get the texture
-			GLint ret = glGetUniformLocation(i.programID, "texturaA");
+			GLint ret = glGetUniformLocation(i.programID, "FontsTexture");
 			glUniform1i(ret, 1);
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, 1);
 
-			glBindVertexArray(i.vao->getHandler());
+			glBindVertexArray(i.vao->getVaoHandler());
 			GLint offset = 0;
-			GLint size = 10;
-			for (GLuint c = 0 ; c < 4 ; c++)
+			GLint size = i.vao->getOffset();
+			for (GLuint c = 0 ; c < i.vao->getElements() ; c++)
 			{
-				offset = c * size;
+				offset = c * i.vao->getOffset();
 				glDrawElements(GL_TRIANGLE_STRIP, size, GL_UNSIGNED_INT, &(i.vao->getvIndex())[offset]);
 			}
 
-			glBindVertexArray(0);
-			glUseProgram(0);
+			//glBindVertexArray(0);
+			//glUseProgram(0);
 		}
 
-		//break;
+		break;
 
 		/*if (rc->getRenderingComponentType() == Engine::Component::renderingComponentType::TERRAIN_MESH)
 		{

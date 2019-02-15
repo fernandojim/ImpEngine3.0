@@ -1,9 +1,11 @@
-/*
- * CRenderingComponent.cpp
- *
- *  Created on: 14 de nov. de 2017
- *      Author: fjimartinez
- */
+/*******************************************
+  File:       CRenderingComponent.h
+  Purpose:    Class for Rendering Component
+  class name: CRenderingComponent
+  ------------------------------------------
+  @Author: Yo
+  @Version: 0
+ *******************************************/
 
 #include "CRenderingComponent.h"
 #include "ComponentManager.h"

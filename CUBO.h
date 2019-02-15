@@ -38,54 +38,24 @@ namespace Engine
 
 		   /********************************************************************
 			* Creates the Uniform Block
+			* program_id : the shader program who use the UBO
+			* uniform_block : name of the block in the shader
+			* size : size of the block in bytes
+			* binding : number of block the program shader will use
 			********************************************************************/
-			void createUniformBlock(GLuint program_id, const std::string& uniform_block);
+			void createUniformBlock(GLuint program_id, const std::string& uniform_block, size_t size, GLuint binding);
 
 		   /********************************************************************
-		    * Add names to the uniform block
+			* Create and alloc the variables to uniform block
 			********************************************************************/
-			void addUniformNames(GLuint program_id, GLuint uniformCount, const GLchar** uniformNames);
-
-		   /********************************************************************
-			* Create and alloc the variables to uniforms
-			********************************************************************/
-			void activeUniformiv(GLuint program_id, GLuint n, const GLvoid * data, size_t size);
 			void addData(GLuint offset, const GLvoid * data, size_t size);
 
-		   /********************************************************************
-			* Bind the UBO to pass to the shader program
-			********************************************************************/
-			void bindUBO();
-
-		   /********************************************************************
-			* Bind the UBO to pass to the shader program
-			********************************************************************/
-			void createUBO();
-
-		   /********************************************************************
-			* Get the Uniform Buffer Object handler
-			********************************************************************/
-			GLuint& getUBOHandler();
-
-		   /********************************************************************
-		    * Get the Uniform Buffer Object handler
-			********************************************************************/
-			GLubyte* getBuffer();
+			GLuint getUboIndex();
 
 		private:
-			static const GLuint max_uniforms = 10;
-
-			GLubyte *m_buffer;    //Buffer where is alloc the Uniform Block
-			GLuint m_uboIndex;   //Ubo index
-			GLint  m_uboSize;    //Size of buffer
-			GLuint m_uboHandler;  //Ubo handler
-			GLuint m_num_uniforms;
-
-			const GLchar* m_names[max_uniforms];
-			GLuint m_indices[max_uniforms];
-			GLint m_offsets[max_uniforms];
-
-			void clear();
+			GLuint m_uboIndex;        //Ubo index
+			GLuint m_uboHandler;      //Ubo handler
+			GLuint m_uboBindingPoint; //Ubo binding point
 		};
 
 	}

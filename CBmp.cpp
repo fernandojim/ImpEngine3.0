@@ -2,7 +2,7 @@
 
 using namespace Engine::Graphics;
 
-CBmp::CBmp(const std::string& sfile)
+CBmp::CBmp(const std::string& sfile) : CObject(sfile)
 {
 	clear();
 
@@ -110,6 +110,16 @@ bool CBmp::loadBMP(const std::string& sfile)
 bool CBmp::getResult()
 {
 	return m_bOk;
+}
+
+bool CBmp::isSquare()
+{
+	if (m_bOk)
+	{
+		return (m_lWidth == m_lHeight);
+	}
+
+	return false;
 }
 
 BYTE* CBmp::getPixelData()

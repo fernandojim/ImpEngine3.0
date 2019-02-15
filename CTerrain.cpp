@@ -3,6 +3,7 @@
 #include "CXMLParser.h"
 #include "CRenderingSystem.h"
 #include "CRenderingComponent.h"
+#include "utils.h"
 
 using namespace Engine::Graphics;
 using namespace Engine::Managers;
@@ -14,8 +15,8 @@ using namespace Engine::Managers;
 //------------------------------------------
 CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& file) : CRenderingComponent(name, shaderid)
 {
-	GLuint x, z, k;
-	float escala = 0.0;
+	GLuint x, z, k, vertex_size, index_size, subindex_size;
+	float scale = 0.0;
 	float rgb_max = 0.0;
 	glm::vec3 vertex;
 	glm::vec2 texel;
@@ -29,116 +30,140 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 		if (parser->getNodes("TERRAIN_MESH"))
 		{
 			//Get name and id
-			m_fAncho = std::stof(parser->getAttributeValue("WIDTH"));
-			m_fLargo = std::stof(parser->getAttributeValue("LENGTH"));
-			m_fAlturaMax = std::stof(parser->getAttributeValue("HEIGHT"));
-			m_texturaHeightfield = parser->getAttributeValue("HEIGHTFIELD");
+			m_cellWide = std::stof(parser->getAttributeValue("CELL_WIDE"));
+			m_maxElevation = std::stof(parser->getAttributeValue("MAX_ELEVATION"));
+			m_heightfieldTexture = parser->getAttributeValue("HEIGHTFIELD");
 			m_materialsName = parser->getAttributeValue("MATERIALS");
-		}
 
-		m_tilingFactorSand = 0.01;
-		m_tilingFactorGrass = 0.01;
-		m_tilingFactorDirt = 0.01;
-		m_tilingFactorSnow = 0.01;
+			m_tilingFactorSand = 0.01;
+			m_tilingFactorGrass = 0.01;
+			m_tilingFactorDirt = 0.01;
+			m_tilingFactorSnow = 0.01;
 
-		/* Load the materials from file */
-		Engine::Managers::MaterialManager::getSingleton().loadMaterialsFromMTL(m_materialsName);
+			/* Load the materials from file */
+			Engine::Managers::MaterialManager::getSingleton().loadMaterialsFromMTL(m_materialsName);
 
-		/* Store the materials loadad into terrain data */
-		//m_MatSand = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("sand")));
-		//m_MatGrass = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("grass")));
-		//m_MatDirt = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("dirt")));
-		//m_MatSnow = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("snow")));
+			/* Store the materials loadad into terrain data */
+			//m_MatSand = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("sand")));
+			//m_MatGrass = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("grass")));
+			//m_MatDirt = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("dirt")));
+			//m_MatSnow = std::unique_ptr<CMaterial>(*::getMaterialManager().getMaterialByName(std::string("snow")));
 
-		//Carga la imagen del mapa de alturas
-		m_pHeightMap = new CBmp(m_texturaHeightfield.c_str());
+			//Carga la imagen del mapa de alturas
+			m_pHeightMap = new CBmp(m_heightfieldTexture.c_str());
 
-		//Si la textura es válida, toma el ancho de esta como m_iDivisiones
-		if (m_pHeightMap != nullptr)
-			m_iDivisiones = m_pHeightMap->getHeight();
-
-		//Calcula el número total de vértices y crea la lista
-		getVAO()->setNumVertex(m_iDivisiones * m_iDivisiones);
-
-		//Calcula el número total de indices de vértices y crea la lista
-		getVAO()->setNumIndex((m_iDivisiones * 2) * (m_iDivisiones - 1));
-
-		//Calcula el valor rgb máximo 0-255
-		k = 0;
-		rgb_max = 0.0;
-		for (x = 0; x < m_iDivisiones; x++)
-		{
-			for (z = 0; z < m_iDivisiones; z++)
+			//Test if the BMP file heightmap was OK and it is an square
+			if (m_pHeightMap && m_pHeightMap->getResult() && m_pHeightMap->isSquare())
 			{
-				if (m_pHeightMap->getPixelData()[k * 3] > rgb_max)
-					rgb_max = m_pHeightMap->getPixelData()[k * 3];
+				//The info will be presented as a grid with m_widthCells x m_heightCells. It will be square
+				// For example:
+				//   ...
+				//   ...
+				//   ...
+				//   heigh=3
+				//   width=3
+				m_numCells = m_pHeightMap->getWidth();
 
-				//if (m_pHeightMap->m_pPixelData[k * 3] > rgb_max)
-				//	rgb_max = m_pHeightMap->m_pPixelData[k * 3];
+				//Calculate the total num of vertex, texels and index
+				vertex_size = m_numCells * m_numCells;
+				subindex_size = m_numCells * 2;
+				index_size = subindex_size  * (m_numCells - 1);
 
-				k++;
+				//Alloc the lists
+				getVAO()->setNumVertex(vertex_size);
+				getVAO()->setNumIndex(index_size);
+				getVAO()->setOffset(subindex_size);
+				getVAO()->getvVertex().reserve(vertex_size);
+				getVAO()->getvNormal().reserve(vertex_size);
+				getVAO()->getvTexel().reserve(vertex_size);
+				getVAO()->getvIndex().reserve(index_size);
+
+				//Gets the max value of RGB
+				k = 0;
+				rgb_max = 0.0;
+				for (x = 0; x < m_numCells; x++)
+				{
+					for (z = 0; z < m_numCells; z++)
+					{
+						if (m_pHeightMap->getPixelData()[k * 3] > rgb_max)
+							rgb_max = m_pHeightMap->getPixelData()[k * 3];
+
+						k++;
+					}
+				}
+
+				//escala la altura máxima del terreno a la altura introducida por el parámetro 'altura'
+				scale = m_maxElevation / rgb_max;
+
+				//Create a vertex grid for the text
+				k = 0;
+				for (x = 0; x < m_numCells; x++)
+				{
+					for (z = 0; z < m_numCells; z++)
+					{
+						vertex.x = x * m_cellWide;
+						vertex.y = m_pHeightMap->getPixelData()[k++ * 3] * scale;
+						vertex.z = z * m_cellWide;
+
+						getVAO()->addVertex(vertex);
+						getVAO()->addTexel(glm::vec2(static_cast<float>(x), static_cast<float>(z)));
+					}
+				}
+
+				/*
+				It´s time to create the index to referenciate the vertexs
+				1---3---4
+				|\  |\  |
+				^ \	^ \ ^
+				|  \|   |
+				0---2---5
+				Type: GL_TRIANGLE_STRIP
+				 */
+				for (z = m_numCells - 1;z-- > 0;)
+				{
+					for (x = 0; x < m_numCells; x++)
+					{
+						index = z + (x * (m_numCells));
+						getVAO()->addIndex(index);
+
+						index = (z + 1) + (x * (m_numCells));
+						getVAO()->addIndex(index);
+					}
+				}
+
+				//Después de crear los vértices del terreno, calculo las normales
+				for (GLuint cont = 0; cont < getVAO()->getNumVertex(); cont++)
+				{
+					normal = CalculaNormalVertice(cont);
+					getVAO()->addNormal(normal);
+				}
+
+				//Cretes the VAO
+				getVAO()->CreateVertexArrays();
+				getVAO()->CreateAttribArrayBuffer(2, 3, getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
+				getVAO()->CreateAttribArrayBuffer(3, 3, getVAO()->getvNormal().data(), getVAO()->getvNormal().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
+				getVAO()->CreateAttribArrayBuffer(4, 2, getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(glm::vec2), GL_STATIC_DRAW);
+
+				m_view = glm::lookAt(glm::vec3(100.0, 100.0, 100.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+				m_projection = glm::perspective(glm::radians(90.0f), (float)800/600, 0.1f, 8000.0f);
+				m_model = glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0));
+				m_mvp = m_projection * m_view * m_model;
+				glm::mat4 aux1 = glm::mat4(1.0);
+				glm::mat3 aux2 = glm::mat3(1.0);
+
+				//I don´t know if is better calculate the MVP in the CPU or GPU
+				m_mvp = m_projection * m_view * m_model;
+
+				//Configure the uniform to the Uniform Buffer Object
+				size_t sz = sizeof(glm::mat4) * 2 + sizeof(glm::mat3);
+				getUBO()->createUniformBlock(shaderid, "Matrices2", sz, 1);
+				getUBO()->addData(0, glm::value_ptr(aux1), sizeof(aux1));
+				getUBO()->addData(sizeof(aux1), glm::value_ptr(m_mvp), sizeof(glm::mat4));
+				getUBO()->addData(sizeof(aux1) * 2, glm::value_ptr(aux2), sizeof(aux2));
 			}
+			else
+				Message::MessageBOX("Terrain", "Heightfield bmp not valid: '" + getName() + "'");
 		}
-
-		//escala la altura máxima del terreno a la altura introducida por el parámetro 'altura'
-		escala = m_fAlturaMax / rgb_max;
-
-		//Se crea el terreno como una rejilla de lado divisiones con forma plana
-		k = 0;
-		for (x = 0; x < m_iDivisiones; x++)
-		{
-			for (z = 0; z < m_iDivisiones; z++)
-			{
-				vertex.x = x * m_fAncho;
-				vertex.y = m_pHeightMap->getPixelData()[k++ * 3] * escala;
-				vertex.z = z * m_fLargo;
-
-				getVAO()->addVertex(vertex);
-
-				texel.x = static_cast<float>(x);// / static_cast<float>(m_iDivisiones);
-				texel.y = static_cast<float>(z);// / static_cast<float>(m_iDivisiones);
-
-				getVAO()->addTexel(texel);
-			}
-		}
-
-		/*
-		Se crea ahora la lista de índices para poder referenciar a cada vértice
-		3 ---<--- 2 
-		        /
-		      /
-		    ^
-		  /
-		1 ---<--- 0
-		*/
-		for (x = 0; x < m_iDivisiones - 1; x++)
-		{
-			for (z = 0; z < m_iDivisiones; z++)
-			{
-				index = (m_iDivisiones * (x + 1)) + z;
-				getVAO()->addIndex(index);
-
-				index = (m_iDivisiones *  x) + z;
-				getVAO()->addIndex(index);
-			}
-		}
-
-		//Después de crear los vértices del terreno, calculo las normales
-		for (GLuint cont = 0; cont < getVAO()->getNumVertex(); cont++)
-		{
-			normal = CalculaNormalVertice(cont);
-			getVAO()->addNormal(normal);
-		}
-
-		//Crea los buffers del objeto VAO
-		getVAO()->CreateArrayBuffer(getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
-		getVAO()->CreateAttribArrayBuffer(2, 3);
-
-		getVAO()->CreateArrayBuffer(getVAO()->getvNormal().data(), getVAO()->getvNormal().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
-		getVAO()->CreateAttribArrayBuffer(3, 3);
-
-		getVAO()->CreateArrayBuffer(getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(glm::vec2), GL_STATIC_DRAW);
-		getVAO()->CreateAttribArrayBuffer(4, 2);
 	}
 }
 
@@ -173,7 +198,7 @@ float CTerrain::GetAltura(float x, float z)
 GLuint CTerrain::getIndice(GLuint x, GLuint z)
 {
      //(x, z) indica la coordenada de vértice de la rejilla de vértices
-     return (z + (x * m_iDivisiones));
+     return (z + (x * m_numCells));
 }
    
 void CTerrain::setAltura(GLuint indice, float altura)
@@ -195,11 +220,11 @@ void CTerrain::setAltura(GLuint indice, float altura)
 			 if (indice < getVAO()->getNumVertex() - 1)
 				 getVAO()->getvVertex()[indice + 1].y += altura * 1 / 5;
              
-			 getVAO()->getvVertex()[indice - m_iDivisiones].y += altura * 1 / 5;
+			 getVAO()->getvVertex()[indice - m_numCells].y += altura * 1 / 5;
              
              //Nos aseguramos que no sobrepasar el número de vértices
-			 if (indice < getVAO()->getNumVertex() - m_iDivisiones - 1)
-				 getVAO()->getvVertex()[indice + m_iDivisiones].y += altura * 1 / 5;
+			 if (indice < getVAO()->getNumVertex() - m_numCells - 1)
+				 getVAO()->getvVertex()[indice + m_numCells].y += altura * 1 / 5;
          }
      }
 }
@@ -213,11 +238,11 @@ bool CTerrain::puntoInterior(GLuint ind)
     else
     {
         //Calcula las coordenadas a partir del índice
-        z = ind % m_iDivisiones;
-        x = ind / m_iDivisiones;
+        z = ind % m_numCells;
+        x = ind / m_numCells;
          
         //Comprobamos que la coordenada x,z corresponde a un punto interior
-        if (x > 0 && x < m_iDivisiones && z > 0 && z < m_iDivisiones)
+        if (x > 0 && x < m_numCells && z > 0 && z < m_numCells)
            return true;
     }
     
@@ -240,19 +265,19 @@ glm::vec3 CTerrain::calculaNormal(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 void CTerrain::obtieneIndicesTriangulo(glm::vec3 pos, glm::vec3 &v1, glm::vec3 &v2, glm::vec3 &v3)
 {
      //Obtenemos las coordenadas de vértices según la posición absoluta
-	GLuint xdiv = static_cast<GLuint>(fabs(pos.x / m_fAncho));
-	GLuint zdiv = static_cast<GLuint>(fabs(pos.z / m_fLargo));
+	GLuint xdiv = static_cast<GLuint>(fabs(pos.x / m_cellWide));
+	GLuint zdiv = static_cast<GLuint>(fabs(pos.z / m_cellWide));
      
     //Comprobamos que estamos dentro del terreno
-    if (xdiv < 0 || xdiv > m_iDivisiones - 1 || zdiv < 0 || zdiv > m_iDivisiones - 1)
+    if (xdiv < 0 || xdiv > m_numCells - 1 || zdiv < 0 || zdiv > m_numCells - 1)
        return;
      
     //Calculamos la posicion relativa a la celda en la que estamos
-    float pos_rel_x = pos.x - ( (float)xdiv * m_fAncho );
-    float pos_rel_z = pos.z - ( (float)zdiv * m_fLargo );
+    float pos_rel_x = pos.x - ( (float)xdiv * m_cellWide );
+    float pos_rel_z = pos.z - ( (float)zdiv * m_cellWide );
      
     //Obtenemos el triangulo en el que está la posición
-	GLuint triangulo = 0;
+	GLint triangulo = 0;
 	if ( pos_rel_z > pos_rel_x )
        triangulo = 1;
         
@@ -267,18 +292,18 @@ void CTerrain::obtieneIndicesTriangulo(glm::vec3 pos, glm::vec3 &v1, glm::vec3 &
 	//   por haberlo sacado de los cálculos anteriores
 	//   ind1, ind1 e ind3 se refiere a los índices en la lista de vértices del terreno 
 	//Calculamos los índices de los vértices del triángulo en el que estamos
-	GLuint p1, p2, p3;
+	GLint p1, p2, p3;
     if (triangulo == 1) 
     {
-		p1 = ( m_iDivisiones * xdiv ) + zdiv;
-        p2 = ( m_iDivisiones * ( xdiv + 1 ) ) + zdiv + 1;
-        p3 = ( m_iDivisiones * xdiv ) + zdiv + 1;
+		p1 = ( m_numCells * xdiv ) + zdiv;
+        p2 = ( m_numCells * ( xdiv + 1 ) ) + zdiv + 1;
+        p3 = ( m_numCells * xdiv ) + zdiv + 1;
     }
     else
     {
-        p1 = ( m_iDivisiones * ( xdiv + 1 ) ) + zdiv;
-        p2 = ( m_iDivisiones * xdiv ) + zdiv;
-        p3 = ( m_iDivisiones * ( xdiv + 1 ) ) + zdiv + 1;
+        p1 = ( m_numCells * ( xdiv + 1 ) ) + zdiv;
+        p2 = ( m_numCells * xdiv ) + zdiv;
+        p3 = ( m_numCells * ( xdiv + 1 ) ) + zdiv + 1;
     }
      
     //Ya tenemos los tres índices de los puntos del triángulo en el que está la coordenada x,z
@@ -301,12 +326,12 @@ glm::vec3 CTerrain::getNormalAtPos(glm::vec3 pos)
 
 float CTerrain::getFronteraX()
 {
-	return m_iDivisiones * m_fAncho;
+	return m_numCells * m_cellWide;
 }
 
 float CTerrain::getFronteraZ()
 {
-	return m_iDivisiones * m_fLargo;
+	return m_numCells * m_cellWide;
 }
 
 float CTerrain::CalculaAlturaMax()
@@ -336,7 +361,7 @@ glm::vec3 CTerrain::CalculaNormalVertice(GLuint iVertice)
 	glm::vec3 v0;
 		
 	//Inicializa la lista de índices
-	for (GLuint i = 0; i < 6; i++)
+	for (GLint i = 0; i < 6; i++)
 		indices[i] = -1;
 	
 	//Obtiene el punto origen
@@ -348,69 +373,69 @@ glm::vec3 CTerrain::CalculaNormalVertice(GLuint iVertice)
 	if ( iVertice == 0 )
 	{
 		indices[0] = 1;
-		indices[1] = m_iDivisiones + 1;
-		indices[2] = m_iDivisiones;
+		indices[1] = m_numCells + 1;
+		indices[2] = m_numCells;
 		nIndices = 3;
 	}
-	else if ( iVertice > 0 && iVertice < m_iDivisiones - 1 )
+	else if ( iVertice > 0 && iVertice < m_numCells - 1 )
 	{
 		indices[0] = iVertice + 1;
-		indices[1] = iVertice + m_iDivisiones + 1;
-		indices[2] = iVertice + m_iDivisiones;
+		indices[1] = iVertice + m_numCells + 1;
+		indices[2] = iVertice + m_numCells;
 		indices[3] = iVertice - 1;
 		nIndices = 4;
 	}
-	else if ( iVertice == m_iDivisiones - 1 )
+	else if ( iVertice == m_numCells - 1 )
 	{
-		indices[0] = iVertice + m_iDivisiones;
+		indices[0] = iVertice + m_numCells;
 		indices[1] = iVertice - 1;
 		nIndices = 2;
 	}
-	else if ( (iVertice > 0) && (iVertice % m_iDivisiones == 0) && (iVertice < m_iDivisiones * (m_iDivisiones - 1)) )
+	else if ( (iVertice > 0) && (iVertice % m_numCells == 0) && (iVertice < m_numCells * (m_numCells - 1)) )
 	{
-		indices[0] = iVertice - m_iDivisiones;
+		indices[0] = iVertice - m_numCells;
 		indices[1] = iVertice + 1;
-		indices[2] = iVertice + m_iDivisiones + 1;
-		indices[3] = iVertice + m_iDivisiones;
+		indices[2] = iVertice + m_numCells + 1;
+		indices[3] = iVertice + m_numCells;
 		nIndices = 4;
 	}
-	else if ( (iVertice > m_iDivisiones) && ((iVertice + 1) % m_iDivisiones == 0) && (iVertice < (m_iDivisiones*m_iDivisiones - 1)) )
+	else if ( (iVertice > m_numCells) && ((iVertice + 1) % m_numCells == 0) && (iVertice < (m_numCells*m_numCells - 1)) )
 	{
-		indices[0] = iVertice + m_iDivisiones;
+		indices[0] = iVertice + m_numCells;
 		indices[1] = iVertice - 1;
-		indices[2] = iVertice - m_iDivisiones - 1;
-		indices[3] = iVertice - m_iDivisiones;
+		indices[2] = iVertice - m_numCells - 1;
+		indices[3] = iVertice - m_numCells;
 		nIndices = 4;
 	}
-	else if ( iVertice == m_iDivisiones * (m_iDivisiones - 1) )
+	else if ( iVertice == m_numCells * (m_numCells - 1) )
 	{
-		indices[0] = iVertice - m_iDivisiones;
+		indices[0] = iVertice - m_numCells;
 		indices[1] = iVertice + 1;
 		nIndices = 2;
 	}
-	else if ( iVertice > m_iDivisiones * (m_iDivisiones - 1) && iVertice < m_iDivisiones * m_iDivisiones - 1 )
+	else if ( iVertice > m_numCells * (m_numCells - 1) && iVertice < m_numCells * m_numCells - 1 )
 	{
 		indices[0] = iVertice - 1;
-		indices[1] = iVertice - m_iDivisiones - 1;
-		indices[2] = iVertice - m_iDivisiones;
+		indices[1] = iVertice - m_numCells - 1;
+		indices[2] = iVertice - m_numCells;
 		indices[3] = iVertice + 1;
 		nIndices = 4;
 	}
-	else if ( iVertice == m_iDivisiones * m_iDivisiones - 1 )
+	else if ( iVertice == m_numCells * m_numCells - 1 )
 	{
 		indices[0] = iVertice - 1;
-		indices[1] = iVertice - m_iDivisiones - 1;
-		indices[2] = iVertice - m_iDivisiones;
+		indices[1] = iVertice - m_numCells - 1;
+		indices[2] = iVertice - m_numCells;
 		nIndices = 3;
 	}
 	else
 	{
 		indices[0] = iVertice + 1;
-		indices[1] = iVertice + m_iDivisiones + 1;
-		indices[2] = iVertice + m_iDivisiones;
+		indices[1] = iVertice + m_numCells + 1;
+		indices[2] = iVertice + m_numCells;
 		indices[3] = iVertice - 1;
-		indices[4] = iVertice - m_iDivisiones - 1;
-		indices[5] = iVertice - m_iDivisiones;
+		indices[4] = iVertice - m_numCells - 1;
+		indices[5] = iVertice - m_numCells;
 		nIndices = 6;
 	}
 

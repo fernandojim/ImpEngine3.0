@@ -14,6 +14,8 @@
 #include <fstream>
 #include <windows.h>
 
+#include "cobject.h"
+
 /////////////////////////////////////////
 //Estructura que contiene la cabecera del 
 //  archivo .bmp
@@ -60,7 +62,7 @@ namespace Engine
 	{
 		//////////////////////////////////////////
 		//Clase archivo BMP
-		class CBmp
+		class CBmp : Engine::Base::CObject
 		{
 		private:
 			bool m_bOk;
@@ -88,6 +90,7 @@ namespace Engine
 			~CBmp();
 
 			bool getResult();
+			bool isSquare();
 
 			BYTE* getPixelData();
 			LONG  getWidth();

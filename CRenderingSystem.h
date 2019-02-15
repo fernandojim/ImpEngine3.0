@@ -75,9 +75,9 @@ namespace Engine
 			Engine::Component::renderingComponentType typ;
 
 			//Matrixes
-			std::shared_ptr<glm::mat4> m_projection;
-			std::shared_ptr<glm::mat4> m_model;
-			std::shared_ptr<glm::mat4> m_view;
+			glm::mat4 m_projection;
+			glm::mat4 m_model;
+			glm::mat4 m_view;
 			glm::mat4 m_mvp;
 
 			//Graphics
@@ -116,7 +116,7 @@ namespace Engine
 		private:
 			void loadShaders(const std::string& sShaders);
 
-			//Total num of shaders
+			//Num of shader programs
 			GLuint m_uiShaders;
 
 			//Shaders map with their program id

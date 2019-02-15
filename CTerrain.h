@@ -18,6 +18,9 @@
 #include "glm\vec2.hpp"
 #include "glm\gtc\type_ptr.hpp"	//Header for glm::value_ptr
 
+#include "glm\glm.hpp"
+#include "glm\gtc\matrix_transform.hpp" //Header for glm::perspective, etc...
+
 #include "CBmp.h"
 #include "CGameObject.h"
 #include "CMaterial.h"
@@ -41,12 +44,11 @@ namespace Engine
 			CTerrain(const std::string& name, GLuint shaderid, const std::string& file);
 			~CTerrain();
 
-			GLuint m_iDivisiones;
-			float  m_fAncho;
-			float  m_fLargo;
-			float  m_fAlturaMax;
-			float  m_fTilingFactor;
-			std::string m_texturaHeightfield;
+			GLuint m_numCells;     //Num of cells x and z axis (square)
+			float  m_cellWide;     //Wide of square cell
+			float  m_maxElevation; //Maximum elevation (y axis)
+			float  m_tilingFactor;
+			std::string m_heightfieldTexture;
 
 			//Bmp con el mapa DTED2 para las alturas
 			CBmp	  *m_pHeightMap;
