@@ -73,9 +73,8 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 				getVAO()->setNumVertex(vertex_size);
 				getVAO()->setNumIndex(index_size);
 				getVAO()->setOffset(subindex_size);
-				getVAO()->getvVertex().reserve(vertex_size);
-				getVAO()->getvNormal().reserve(vertex_size);
-				getVAO()->getvTexel().reserve(vertex_size);
+				getVAO()->setElements(subindex_size - 1);
+				getVAO()->getvVextex3V3N2NP().reserve(vertex_size);
 				getVAO()->getvIndex().reserve(index_size);
 
 				//Gets the max value of RGB
@@ -96,17 +95,22 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 				scale = m_maxElevation / rgb_max;
 
 				//Create a vertex grid for the text
+				Engine::Graphics::Vextex3V3N2NP v;
 				k = 0;
 				for (x = 0; x < m_numCells; x++)
 				{
 					for (z = 0; z < m_numCells; z++)
 					{
-						vertex.x = x * m_cellWide;
-						vertex.y = m_pHeightMap->getPixelData()[k++ * 3] * scale;
-						vertex.z = z * m_cellWide;
+						//Create the vertex
+						v.vertex.x = x * m_cellWide;
+						v.vertex.y = m_pHeightMap->getPixelData()[k++ * 3] * scale;
+						v.vertex.z = z * m_cellWide;
 
-						getVAO()->addVertex(vertex);
-						getVAO()->addTexel(glm::vec2(static_cast<float>(x), static_cast<float>(z)));
+						//Create the texel
+						v.texel.x = static_cast<float>(x);
+						v.texel.y = static_cast<float>(z);
+
+						getVAO()->addVextex3V3N2NP(v);
 					}
 				}
 
@@ -131,18 +135,21 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 					}
 				}
 
-				//Después de crear los vértices del terreno, calculo las normales
+				//After creating the
 				for (GLuint cont = 0; cont < getVAO()->getNumVertex(); cont++)
 				{
-					normal = CalculaNormalVertice(cont);
-					getVAO()->addNormal(normal);
+					v.normal.x = CalculaNormalVertice(cont).x;
+					v.normal.y = CalculaNormalVertice(cont).y;
+					v.normal.z = CalculaNormalVertice(cont).z;
+					getVAO()->getvVextex3V3N2NP().at(cont).normal = v.normal;
 				}
 
-				//Cretes the VAO
+				//VERTEX ATTRIB OBJECT
 				getVAO()->CreateVertexArrayObject();
-				getVAO()->CreateAttribArrayBuffer(2, 3, getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
-				getVAO()->CreateAttribArrayBuffer(3, 3, getVAO()->getvNormal().data(), getVAO()->getvNormal().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
-				getVAO()->CreateAttribArrayBuffer(4, 2, getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(glm::vec2), GL_STATIC_DRAW);
+				getVAO()->CreateArrayBuffer(getVAO()->getvVextex3V3N2NP().data(), getVAO()->getvVextex3V3N2NP().size() * sizeof(Engine::Graphics::Vextex3V3N2NP), GL_STATIC_DRAW);
+				getVAO()->CreateVertexAttribPointer(shaderid, "Vertex", 3, sizeof(Engine::Graphics::Vextex3V3N2NP), 0);
+				getVAO()->CreateVertexAttribPointer(shaderid, "Normal", 3, sizeof(Engine::Graphics::Vextex3V3N2NP), sizeof(Engine::Graphics::vector3));
+				getVAO()->CreateVertexAttribPointer(shaderid, "Texel", 2, sizeof(Engine::Graphics::Vextex3V3N2NP), 2 * sizeof(Engine::Graphics::vector3));
 
 				m_view = glm::lookAt(glm::vec3(100.0, 100.0, 100.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 				m_projection = glm::perspective(glm::radians(90.0f), (float)800/600, 0.1f, 8000.0f);
@@ -210,21 +217,26 @@ void CTerrain::setAltura(GLuint indice, float altura)
      else
      {
          alt = altura * 4 / 5;
-         getVAO()->getvVertex()[indice].y += alt;
+         //getVAO()->getvVertex()[indice].y += alt;
+         getVAO()->getvVextex3V3N2NP()[indice].vertex.y += alt;
          
          if (puntoInterior(indice))
          {
-        	 getVAO()->getvVertex()[indice - 1].y += altura * 1 / 5;
+        	 //getVAO()->getvVertex()[indice - 1].y += altura * 1 / 5;
+        	 getVAO()->getvVextex3V3N2NP()[indice - 1].vertex.y += altura * 1 / 5;
              
              //Nos aseguramos que no sobrepasar el número de vértices
 			 if (indice < getVAO()->getNumVertex() - 1)
-				 getVAO()->getvVertex()[indice + 1].y += altura * 1 / 5;
+				 //getVAO()->getvVertex()[indice + 1].y += altura * 1 / 5;
+			 	 getVAO()->getvVextex3V3N2NP()[indice + 1].vertex.y += altura * 1 / 5;
              
-			 getVAO()->getvVertex()[indice - m_numCells].y += altura * 1 / 5;
+			 //getVAO()->getvVertex()[indice - m_numCells].y += altura * 1 / 5;
+			 getVAO()->getvVextex3V3N2NP()[indice - m_numCells].vertex.y += altura * 1 / 5;
              
              //Nos aseguramos que no sobrepasar el número de vértices
 			 if (indice < getVAO()->getNumVertex() - m_numCells - 1)
-				 getVAO()->getvVertex()[indice + m_numCells].y += altura * 1 / 5;
+				 //getVAO()->getvVertex()[indice + m_numCells].y += altura * 1 / 5;
+			 	 getVAO()->getvVextex3V3N2NP()[indice + m_numCells].vertex.y += altura * 1 / 5;
          }
      }
 }
@@ -308,9 +320,13 @@ void CTerrain::obtieneIndicesTriangulo(glm::vec3 pos, glm::vec3 &v1, glm::vec3 &
      
     //Ya tenemos los tres índices de los puntos del triángulo en el que está la coordenada x,z
     //   Mediante la ecuación del plano, obtenemos la coordenada Y de nuestro punto x,z
-	v1 = glm::vec3(getVAO()->getvVertex()[p1].x, getVAO()->getvVertex()[p1].y, getVAO()->getvVertex()[p1].z);
-	v2 = glm::vec3(getVAO()->getvVertex()[p2].x, getVAO()->getvVertex()[p2].y, getVAO()->getvVertex()[p2].z);
-	v3 = glm::vec3(getVAO()->getvVertex()[p3].x, getVAO()->getvVertex()[p3].y, getVAO()->getvVertex()[p3].z);
+	//v1 = glm::vec3(getVAO()->getvVertex()[p1].x, getVAO()->getvVertex()[p1].y, getVAO()->getvVertex()[p1].z);
+	//v2 = glm::vec3(getVAO()->getvVertex()[p2].x, getVAO()->getvVertex()[p2].y, getVAO()->getvVertex()[p2].z);
+	//v3 = glm::vec3(getVAO()->getvVertex()[p3].x, getVAO()->getvVertex()[p3].y, getVAO()->getvVertex()[p3].z);
+
+	v1 = glm::vec3(getVAO()->getvVextex3V3N2NP()[p1].vertex.x, getVAO()->getvVextex3V3N2NP()[p1].vertex.y, getVAO()->getvVextex3V3N2NP()[p1].vertex.z);
+	v2 = glm::vec3(getVAO()->getvVextex3V3N2NP()[p2].vertex.x, getVAO()->getvVextex3V3N2NP()[p2].vertex.y, getVAO()->getvVextex3V3N2NP()[p2].vertex.z);
+	v3 = glm::vec3(getVAO()->getvVextex3V3N2NP()[p3].vertex.x, getVAO()->getvVextex3V3N2NP()[p3].vertex.y, getVAO()->getvVextex3V3N2NP()[p3].vertex.z);
 }
 
 glm::vec3 CTerrain::getNormalAtPos(glm::vec3 pos)
@@ -342,7 +358,8 @@ float CTerrain::CalculaAlturaMax()
 	{
 		if (getVAO()->getvVertex()[i].y > alt)
 		{
-			alt = getVAO()->getvVertex()[i].y;
+			//alt = getVAO()->getvVertex()[i].y;
+			alt = getVAO()->getvVextex3V3N2NP()[i].vertex.y;
 		}
 	}
 
@@ -365,9 +382,13 @@ glm::vec3 CTerrain::CalculaNormalVertice(GLuint iVertice)
 		indices[i] = -1;
 	
 	//Obtiene el punto origen
-	v0.x = getVAO()->getvVertex()[iVertice].x;
-	v0.y = getVAO()->getvVertex()[iVertice].y;
-	v0.z = getVAO()->getvVertex()[iVertice].z;
+	//v0.x = getVAO()->getvVertex()[iVertice].x;
+	//v0.y = getVAO()->getvVertex()[iVertice].y;
+	//v0.z = getVAO()->getvVertex()[iVertice].z;
+
+	v0.x = getVAO()->getvVextex3V3N2NP()[iVertice].vertex.x;
+	v0.y = getVAO()->getvVextex3V3N2NP()[iVertice].vertex.y;
+	v0.z = getVAO()->getvVextex3V3N2NP()[iVertice].vertex.z;
 	
 	//Según el número de divisiones y su posición se obtienen los vértices adyacentes
 	if ( iVertice == 0 )
@@ -446,9 +467,13 @@ glm::vec3 CTerrain::CalculaNormalVertice(GLuint iVertice)
 		//Comprueba si está dentro de la rejilla del terreno
 		if ( indices[i] >= 0 )
 		{
-			vertices[nVertices].x = getVAO()->getvVertex()[indices[i]].x;
-			vertices[nVertices].y = getVAO()->getvVertex()[indices[i]].y;
-			vertices[nVertices].z = getVAO()->getvVertex()[indices[i]].z;
+			//vertices[nVertices].x = getVAO()->getvVertex()[indices[i]].x;
+			//vertices[nVertices].y = getVAO()->getvVertex()[indices[i]].y;
+			//vertices[nVertices].z = getVAO()->getvVertex()[indices[i]].z;
+
+			vertices[nVertices].x = getVAO()->getvVextex3V3N2NP()[indices[i]].vertex.x;
+			vertices[nVertices].y = getVAO()->getvVextex3V3N2NP()[indices[i]].vertex.y;
+			vertices[nVertices].z = getVAO()->getvVextex3V3N2NP()[indices[i]].vertex.z;
 
 			// Siguiente vértice
 			nVertices++;

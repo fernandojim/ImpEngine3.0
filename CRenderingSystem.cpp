@@ -221,22 +221,21 @@ void CRenderingSystem::Render()
 			//glBindVertexArray(0);
 			//glUseProgram(0);
 		}
+		else if (i.typ == Engine::Component::renderingComponentType::TERRAIN_MESH)
+		{
+			glBindVertexArray(i.vao->getVaoHandler());
+			GLuint ele = i.vao->getElements();
+			GLuint offset_apl = 0;
+			GLuint size = i.vao->getOffset();
+			for (GLuint c = 0 ; c < ele ; c++)
+			{
+				offset_apl = size * c;
+				//glDrawElements(GL_TRIANGLE_STRIP, size, GL_UNSIGNED_INT, &i.vao->getv1Index()[offset_apl]);
+				glDrawArrays(GL_TRIANGLE_STRIP, offset_apl, size);
+			}
+		}
 
 		break;
-
-		/*if (rc->getRenderingComponentType() == Engine::Component::renderingComponentType::TERRAIN_MESH)
-		{
-			glBindVertexArray(i.vao->getHandler());
-			GLuint offset;
-			GLuint size = sqrt(i.vao->getNumVertex()); //size is square root of numvertex
-			GLuint size2 = size * 2;
-			for (GLuint j = 0 ; j < size2 - 1 ; j++)
-			{
-				offset = size2 * j;
-				glDrawElements(GL_TRIANGLE_STRIP, size2, GL_UNSIGNED_INT, &i.vao->getv1Index()[offset]);
-			}
-		}*/
-
 	}
 }
 
