@@ -58,6 +58,11 @@ namespace Engine
 			void setComponentType(COMPONENT_TYPE c_ty);
 
 		   /*********************************************************************
+			** Pure virtual method to treate received events
+			*********************************************************************/
+			virtual void ReceiveEvent(void *buff) = 0;
+
+		   /*********************************************************************
 			** Get the type of this component (RENDERER, TRANSFORM, ... )
 			*********************************************************************/
 			COMPONENT_TYPE getComponentType();

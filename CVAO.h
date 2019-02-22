@@ -73,20 +73,18 @@ namespace Engine
 			~CVAO();
 
 		   /********************************************************************************************
-			* Clear the internal info
+			* 1) Creates the Array Buffer Object (VAO). Sets its id
 			********************************************************************************************/
-			void Clear();
+			void CreateVertexArrayObject();
 
 		   /********************************************************************************************
-			* Creates the id for the Arrays
-			********************************************************************************************/
-			void CreateVertexArrays();
-
-		   /********************************************************************************************
-			* Creates the Array Buffer
+			* 2) Creates an Array Buffer and its usage
 			********************************************************************************************/
 			void CreateArrayBuffer(GLvoid *buffer, GLuint size, GLenum usage);
 
+		   /********************************************************************************************
+			* 3) Associates an attrib id to a given buffer
+			********************************************************************************************/
 			void CreateVertexAttribPointer(GLuint program_id, const std::string& attrib_name, GLuint elements, size_t sz, GLuint offset);
 
 		   /********************************************************************************************
@@ -96,7 +94,7 @@ namespace Engine
 			void CreateAttribArrayBuffer(GLuint attrib_id, GLuint elements, void *buffer, GLuint size, GLenum usage);
 
 		   /********************************************************************************************
-			* Get/set methods for the internal info
+			* Get/set methods for the internal arrays info
 			********************************************************************************************/
 			GLuint getVaoHandler(); //VAO handler
 			GLuint getNumVertex();  //Num vertex
@@ -109,7 +107,7 @@ namespace Engine
 			void setOffset(GLuint n);
 			void setElements(GLuint n);
 
-			//Getters (Despite the rvalue functions)
+			//Getters
 			std::vector<glm::vec3>& getvVertex();
 			std::vector<glm::vec3>& getvNormal();
 			std::vector<glm::vec2>& getvTexel();
@@ -130,6 +128,15 @@ namespace Engine
 
 			GLuint getVBOHandesAt(GLuint buffer_id);
 
+			void BindBuffer(GLuint id);
+			void MapBuffer();
+			void UnbindBuffer();
+
+		   /********************************************************************************************
+			* Clear the internal info
+			********************************************************************************************/
+			void Clear();
+
 			void debug();
 
 		private:
@@ -143,7 +150,7 @@ namespace Engine
 			GLuint m_elements;    //Elements per draw command
 			GLuint m_offset;      //offset to apply
 
-			//Std vectors
+			//Std vectors with the vertex info
 			std::vector<GLuint>    m_Index;
 			std::vector<glm::vec3> m_Vertex;
 			std::vector<glm::vec3> m_Normal;
@@ -156,10 +163,10 @@ namespace Engine
 		   /********************************************************************************************
 			* Handlers for both to manage the VAO and its buffers
 			********************************************************************************************/
-			GLuint m_arrayhandler;
-			GLuint m_vaoHandle;
+			GLuint m_vaoHandler;
 			static const int MaxBuffers = 6;
-			GLuint m_vboHandles[MaxBuffers];
+			GLuint m_vboHandlers[MaxBuffers];
+			GLuint m_vboHandler;
 		};
 	};
 };

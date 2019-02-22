@@ -50,6 +50,8 @@ namespace Engine
 			//Constructor with object and shader files
 			CMesh(const std::string& name, GLuint shaderid, const std::string& file);
 
+			 void ReceiveEvent(void *buff);
+
 			//Destructor
 			virtual ~CMesh();
 

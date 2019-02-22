@@ -5,6 +5,8 @@
  *      Author: fjimartinez
  */
 
+#include <algorithm>
+
 #include "GameObjectManager.h"
 #include "ComponentManager.h"
 #include "CXMLParser.h"
@@ -35,6 +37,8 @@ GameObjectManager::GameObjectManager()
 
 void GameObjectManager::startup()
 {
+	release();
+
 	load(GameObjectManagerFile);
 }
 
@@ -56,7 +60,7 @@ void GameObjectManager::load(const std::string& file)
 			std::shared_ptr<Engine::Entity::CGameObject> gameobject = std::make_shared<Engine::Entity::CGameObject>(name, static_cast<Engine::Entity::GameObjectLayer>(layer));
 
 			//Set the gameobject parent
-			gameobject->setParent(getGameObjectByName(parent));
+			gameobject->setParent(getGameObject(parent));
 
 			//Finally, adds the gameobject to the gameobject list
 			addGameObject(gameobject);
@@ -74,47 +78,33 @@ void GameObjectManager::load(const std::string& file)
 
 void GameObjectManager::addGameObject(const std::shared_ptr<Engine::Entity::CGameObject>& go)
 {
-	m_gameObjects.push_back(go);
+	m_gameObjects.insert(std::pair<std::string, std::shared_ptr<Engine::Entity::CGameObject>>(go->getName(), go));
 }
 
 void GameObjectManager::deleteGameObject(const std::shared_ptr<Engine::Entity::CGameObject>& go)
 {
-	int i = 0;
+	/*int i = 0;
 	for (auto j : m_gameObjects)
 	{
 		if (j == go)
 			m_gameObjects.erase(m_gameObjects.begin() + i);
 		i++;
-	}
+	}*/
 }
 
-void GameObjectManager::AttachComponentToGameObject(const std::shared_ptr<Engine::Component::CComponent>& render_component, const std::string& go_name)
+void GameObjectManager::AttachComponent(const std::shared_ptr<Engine::Component::CComponent>& component, const std::string& go_name)
 {
 	//Search the gameobject to attach with
+	std::shared_ptr<Engine::Entity::CGameObject> obj = getGameObject(go_name);
 
-	std::shared_ptr<Engine::Entity::CGameObject> obj = getGameObjectByName(go_name);
-	//std::shared_ptr<CGameObject> obj = getGameObjectByName(go_name);
-
-
-	obj->AddComponent(render_component);
-
-	//Creates the pointer to Gameobject for the component
-	//render_component->AttachToGameObject(obj);
-	//render_component->AttachToGameObject(getGameObjectByName(go_name));
+	//Add the component if it exists
+	if (obj != nullptr)
+		obj->AddComponent(component);
 }
 
-std::shared_ptr<Engine::Entity::CGameObject> GameObjectManager::getGameObjectByName(const std::string& name)
+std::shared_ptr<Engine::Entity::CGameObject> GameObjectManager::getGameObject(const std::string& name)
 {
-	//Search the object in the list
-	for (auto &i : m_gameObjects)
-	{
-		if (!i->getName().compare(name))
-			return i;
-	}
-
-	//If there is no object with that 'name' the object won´t have parent (i.e. main object)
-	return nullptr;
-
+	return m_gameObjects[name];
 }
 
 void GameObjectManager::release()
@@ -122,14 +112,44 @@ void GameObjectManager::release()
 	m_gameObjects.clear();
 }
 
+bool GameObjectManager::SendEvent(const std::string& sender, const std::string& receiver, EVENT_TYPE typ, void* info)
+{
+	//Create the event to send to the entity and give its values
+	Event ev;
+
+	ev.sender = sender;
+	ev.receiver = receiver;
+	ev.eventTyp = typ;
+	ev.buffer = info;
+
+	//Gets the GameObject who the message was send to. It is find by its name
+	std::shared_ptr<Engine::Entity::CGameObject> go = getGameObject(receiver);
+
+	if (go != nullptr)
+	{
+		//Depending on type of event send the event to a component
+		switch (typ)
+		{
+			//Send a text to the text gameobject
+			case Engine::Managers::EVENT_TYPE::EVENT_RENDER_TEXT:
+				go->getComponent(Engine::Component::COMPONENT_TYPE::RENDERING)->ReceiveEvent(ev.buffer);
+			break;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 void GameObjectManager::debug()
 {
 	for (auto i : m_gameObjects)
 	{
-		std::cout << "\n NAME='" << i->getName() << "'";
+		std::cout << "\n NAME='" << i.second->getName() << "'";
 
-		std::shared_ptr<Engine::Component::CComponent> c1 = i->getComponent(Engine::Component::COMPONENT_TYPE::TRANSFORM);
-		std::shared_ptr<Engine::Component::CComponent> c2 = i->getComponent(Engine::Component::COMPONENT_TYPE::RENDERING);
+		std::shared_ptr<Engine::Component::CComponent> c1 = i.second->getComponent(Engine::Component::COMPONENT_TYPE::TRANSFORM);
+		std::shared_ptr<Engine::Component::CComponent> c2 = i.second->getComponent(Engine::Component::COMPONENT_TYPE::RENDERING);
 
 		if (c1 != nullptr)
 			std::cout << " TRANSFORM COMPONENT NAME='" + c1->getName() + "'";

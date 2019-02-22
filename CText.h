@@ -20,6 +20,7 @@
 #include "glm\gtc\matrix_transform.hpp" //Header for glm::perspective, etc...
 #include "glm\gtc\type_ptr.hpp"
 #include "CRenderingComponent.h"
+#include "GameObjectManager.h"
 
 namespace Engine
 {
@@ -31,9 +32,9 @@ namespace Engine
 			CText(const std::string& name, GLuint shaderid, const std::string& file);
 			~CText();
 
-			void text(const std::string& tx);
-
 			void setIdTexture(GLuint id);
+
+			void ReceiveEvent(void *buff);
 
 		private:
 			bool loadValues(const std::string& file);
@@ -44,6 +45,7 @@ namespace Engine
 
 			std::vector<GLuint>	m_charCodes;
 
+			void text(const std::string& tx);
 			void calculateTextureCoordinates();
 
 		   /********************************************************************************************
@@ -64,7 +66,6 @@ namespace Engine
 			** Texture coordinates for rendering the characters
 			********************************************************************************************/
 			std::vector<Engine::Graphics::vector2> m_charTextures;
-
 		};
 	}
 }

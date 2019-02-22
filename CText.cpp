@@ -5,6 +5,7 @@
 #include "TextureManager.h"
 #include "CXMLParser.h"
 #include "CRenderingSystem.h"
+#include "GameObjectManager.h"
 
 using namespace Engine::Graphics;
 
@@ -27,63 +28,93 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 	// Read the content of file
 	if (loadValues(file))
 	{
-		//Total num of vertex and texels and reserve it
-		size = (m_gridHeight + 1) * (m_gridWidth + 1);
+		//Calcule total num of vertex and texels and reserve it
+		//Size is the number of vertex
+		size = 4 * m_gridHeight * m_gridWidth;
 		getVAO()->setNumVertex(size);
-		getVAO()->setOffset((m_gridWidth + 1) * 2);
-		getVAO()->setElements(m_gridHeight);
 		getVAO()->getvVextex3V3N2NP().reserve(size);
 
-		//Total num of index
-		index = ((m_gridWidth + 1) * 2 ) * m_gridHeight;
+		//Set offsets - info for render loop
+		//Each quad has 4 elements
+		getVAO()->setOffset(4);
+
+		//Number total of quads
+		getVAO()->setElements(m_gridHeight * m_gridWidth);
+
+		//Total num of index, in this case they are (m_gridHeight * m_gridWidth) quads
+		index = 4 * m_gridHeight * m_gridWidth;
 		getVAO()->setNumIndex(index);
 		getVAO()->getvIndex().reserve(index);
 
-		//Create a vertex grid for the text
+		//Create each quad starting from the upper left corner.
 		Engine::Graphics::Vextex3V3N2NP v;
-		for (x = 0; x <= m_gridHeight; x++)
+		for (y = m_gridHeight;y-- > 0;)
 		{
-			for (y = 0; y <= m_gridWidth; y++)
+			for (x = 0; x <= m_gridWidth-1; x++)
 			{
-				//Vertex
+				//Vertex: 0
 				v.vertex.x = x * m_cellWidth;
 				v.vertex.y = y * m_cellWidth;
 				v.vertex.z = 0.0;
-
-				//Texel
-				//v.texel.x = static_cast<float>(x);
-				//v.texel.y = static_cast<float>(y);
 				v.texel.x = 0.0;
 				v.texel.y = 0.0;
+				getVAO()->addVextex3V3N2NP(v);
 
+				//Vertex: 1
+				v.vertex.x = x * m_cellWidth;
+				v.vertex.y = (y + 1) * m_cellWidth;
+				v.vertex.z = 0.0;
+				v.texel.x = 0.0;
+				v.texel.y = 0.0;
+				getVAO()->addVextex3V3N2NP(v);
+
+				//Vertex: 2
+				v.vertex.x = (x + 1) * m_cellWidth;
+				v.vertex.y = y * m_cellWidth;
+				v.vertex.z = 0.0;
+				v.texel.x = 0.0;
+				v.texel.y = 0.0;
+				getVAO()->addVextex3V3N2NP(v);
+
+				//Vertex: 3
+				v.vertex.x = (x + 1) * m_cellWidth;
+				v.vertex.y = (y + 1) * m_cellWidth;
+				v.vertex.z = 0.0;
+				v.texel.x = 0.0;
+				v.texel.y = 0.0;
 				getVAO()->addVextex3V3N2NP(v);
 			}
 		}
 
 		/*It´s time to create the index to referenciate the vertexs
-		1---3---4
-		|\  |\  |
-		^ \	^ \ ^
-		|  \|   |
-		0---2---5
+		 * For that, we need to create index to create independant quads
+		 * where each character will be renderized.
+		1---3---5     1---3  3---5
+		|\  |\  |     |\  |  |\  |
+		^ \	^ \ ^ =>  ^ \ ^  ^ \ ^
+		|  \|   |     |  \|  |  \|
+		0---2---4     0---2  2---4
 		Type: GL_TRIANGLE_STRIP
 		*/
-		for (y = m_gridHeight;y-- > 0;)
+		index = 0;
+		for (y = 0; y < m_gridHeight; y++)
 		{
-			for (x = 0; x <= m_gridWidth; x++)
+			for (x = 0; x < m_gridWidth; x++)
 			{
-				index = y + (x * (m_gridHeight + 1));
+				//index = y + (x * m_gridHeight);
 				getVAO()->addIndex(index);
+				getVAO()->addIndex(index + 1);
+				getVAO()->addIndex(index + 2);
+				getVAO()->addIndex(index + 3);
 
-				index = (y + 1) + (x * (m_gridHeight + 1));
-				getVAO()->addIndex(index);
+				index = index + 2;
 			}
+
+			index = index + 2;
 		}
 
-		text("A");
-
 		//VERTEX ATTRIB OBJECT
-		getVAO()->CreateVertexArrays();
+		getVAO()->CreateVertexArrayObject();
 		getVAO()->CreateArrayBuffer(getVAO()->getvVextex3V3N2NP().data(), getVAO()->getvVextex3V3N2NP().size() * sizeof(Engine::Graphics::Vextex3V3N2NP), GL_STATIC_DRAW);
 		getVAO()->CreateVertexAttribPointer(shaderid, "Vertex", 3, sizeof(Engine::Graphics::Vextex3V3N2NP), 0);
 		getVAO()->CreateVertexAttribPointer(shaderid, "Texel", 2, sizeof(Engine::Graphics::Vextex3V3N2NP), 2 * sizeof(Engine::Graphics::vector3));
@@ -108,20 +139,29 @@ CText::CText(const std::string& name, GLuint shaderid, const std::string& file) 
 		//Load the text texture
 		m_uiFontsTexture = Engine::Managers::TextureManager::getSingleton().loadTexture(m_textureFonts);
 	}
+
+	//text((const char*)Engine::Managers::GameObjectManager::getGameObjectManagerInstance().messages[0].buffer);
 }
 
 void CText::text(const std::string& tx)
 {
 	GLuint i = 0;
+	GLuint offset = 2;
+	GLuint offset_texture = 0;
 	GLuint texture_index = 0;
+	GLubyte c = 0;
+	GLuint ele = getVAO()->getElements();
 
-	for (auto c : tx)
+	//Traverses the list of string since the number of elements to display
+	while (i < ele && i < tx.length())
 	{
-		if (c >= 65 or c <= 90) //Characters A to Z
+		c = tx.at(i);
+
+		if (c >= 65 && c <= 90) //Characters A to Z
 		{
 			texture_index = c - 65; //Thus, the code will start at 0 code ('A')
 		}
-		else if (c >= 48 or c <= 57) //Characters 0 to 9
+		else if (c >= 48 && c <= 57) //Characters 0 to 9
 		{
 			texture_index = c - 22;
 		}
@@ -135,20 +175,27 @@ void CText::text(const std::string& tx)
 		}
 
 		//Read the texture coordinates for each character and store it in the vertex buffers
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i)).texel.x = m_charTextures.at(texture_index).x;
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i)).texel.y = m_charTextures.at(texture_index).y;
+		offset = i * 4;
+		offset_texture = texture_index * 4;
+		getVAO()->getvVextex3V3N2NP().at(offset).texel.x = m_charTextures.at(offset_texture).x;
+		getVAO()->getvVextex3V3N2NP().at(offset).texel.y = m_charTextures.at(offset_texture).y;
 
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i+1)).texel.x = m_charTextures.at(texture_index+1).x;
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i+1)).texel.y = m_charTextures.at(texture_index+1).y;
+		getVAO()->getvVextex3V3N2NP().at(offset+1).texel.x = m_charTextures.at(offset_texture+1).x;
+		getVAO()->getvVextex3V3N2NP().at(offset+1).texel.y = m_charTextures.at(offset_texture+1).y;
 
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i+2)).texel.x = m_charTextures.at(texture_index+2).x;
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i+2)).texel.y = m_charTextures.at(texture_index+2).y;
+		getVAO()->getvVextex3V3N2NP().at(offset+2).texel.x = m_charTextures.at(offset_texture+2).x;
+		getVAO()->getvVextex3V3N2NP().at(offset+2).texel.y = m_charTextures.at(offset_texture+2).y;
 
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i+3)).texel.x = m_charTextures.at(texture_index+3).x;
-		getVAO()->getvVextex3V3N2NP().at(getVAO()->getvIndex().at(i+3)).texel.y = m_charTextures.at(texture_index+3).y;
+		getVAO()->getvVextex3V3N2NP().at(offset+3).texel.x = m_charTextures.at(offset_texture+3).x;
+		getVAO()->getvVextex3V3N2NP().at(offset+3).texel.y = m_charTextures.at(offset_texture+3).y;
 
 		i++;
 	}
+
+	//Bind the buffer with id=0 (Vextex3V3N2NP buffer) and map the buffer to modify its values
+	getVAO()->BindBuffer(0);
+	getVAO()->MapBuffer();
+	glUnmapBuffer(GL_ARRAY_BUFFER);
 }
 
 bool CText::loadValues(const std::string& file)
@@ -266,17 +313,16 @@ void CText::calculateTextureCoordinates()
 			y++;
 		}
 	}
-
-	//Add a blank texture
-	texel.x = 0.0;
-	texel.y = 0.0;
-
-	m_charTextures.push_back(texel);
 }
 
 void CText::setIdTexture(GLuint id)
 {
 	m_uiFontsTexture = id;
+}
+
+void CText::ReceiveEvent(void *buff)
+{
+	text((const std::string&)buff);
 }
 
 CText::~CText()

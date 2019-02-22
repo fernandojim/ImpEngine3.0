@@ -37,11 +37,6 @@ void CTransformComponent::Clear()
 	m_angle = 0.0;
 }
 
-CTransformComponent::~CTransformComponent()
-{
-
-}
-
 glm::vec3 Engine::Component::stringToVec3(const std::string& cad)
 {
 	std::istringstream c(cad);
@@ -59,4 +54,14 @@ glm::vec3 Engine::Component::stringToVec3(const std::string& cad)
 	ret.z = std::atof(token.c_str());
 
 	return ret;
+}
+
+void CTransformComponent::ReceiveEvent(void *buff)
+{
+
+}
+
+CTransformComponent::~CTransformComponent()
+{
+
 }

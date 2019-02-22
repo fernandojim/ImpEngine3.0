@@ -32,6 +32,8 @@ namespace Engine
 
 			void Clear();
 
+			void ReceiveEvent(void *buff);
+
 		public:
 			glm::mat4 m_WorldTransformation;
 			glm::mat4 m_LocalTransformation;

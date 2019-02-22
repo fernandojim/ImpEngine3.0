@@ -27,6 +27,7 @@ namespace Engine
 			CSystem();
 			CSystem(const SystemType& tp);
 
+			virtual void Animate() = 0;
 			virtual void Update(float dt) = 0;
 			virtual void startup() = 0;
 			virtual void release() = 0;

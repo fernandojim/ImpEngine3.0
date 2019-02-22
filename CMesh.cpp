@@ -51,7 +51,7 @@ bool CMesh::load(const std::string& file)
 		/* Create VAO with the vertex arrays loaded */
 		if (getVAO()->getNumVertex() > 0)
 		{
-			getVAO()->CreateVertexArrays();
+			getVAO()->CreateVertexArrayObject();
 
 			getVAO()->CreateAttribArrayBuffer(5, 3, &getVAO()->getvVertex()[0], getVAO()->getNumVertex() * sizeof(float) * 3, GL_STATIC_DRAW);
 
@@ -308,4 +308,9 @@ face CMesh::getFaceInfo(const std::string& cad)
 	}
 
 	return f;
+}
+
+void CMesh::ReceiveEvent(void *buff)
+{
+
 }

@@ -8,6 +8,8 @@
 #include "InputManager.h"
 #include "VideoManager.h"
 #include "GameManager.h"
+#include "GameObjectManager.h"
+#include "CObject.h"
 
 using namespace Engine::Managers;
 
@@ -69,9 +71,12 @@ void InputManager::ManageInputEvents()
 
 		CheckInput();
 	}
-	else
+	else //When no there is no events
 	{
 		Engine::Managers::GameManager::getGameManagerInstance().getElapsedSeconds();
+
+		Engine::Managers::GameObjectManager::getGameObjectManagerInstance().SendEvent("input", "text", Engine::Managers::EVENT_TYPE::EVENT_RENDER_TEXT,
+				&Engine::Managers::GameManager::getGameManagerInstance().getsFPS()[0]);
 	}
 }
 
@@ -121,6 +126,7 @@ void InputManager::OnKeyDown(SDL_Keycode key)
 	{
 		//if (glm::length(m_gameCamera->velocity) < 25.0)
 		//	m_gameCamera->velocity += glm::vec3(0.0, 0.0, 2.0);
+		//getGameObjectManager().SendMessage("player", MOVEMENT, 2.0)
 	}
 
 	// Atrás

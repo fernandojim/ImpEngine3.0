@@ -85,6 +85,8 @@ namespace Engine
 
 			void Animate(double dt);
 			void Update();
+
+			void ReceiveEvent(void *buff);
 		};
 	}
 }

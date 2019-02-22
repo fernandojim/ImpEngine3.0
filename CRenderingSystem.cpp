@@ -14,6 +14,8 @@
 #include "CXMLParser.h"
 #include "CText.h"
 #include "utils.h"
+#include "GameObjectManager.h"
+#include "CGameObject.h"
 
 #include "glm\glm.hpp"
 #include "glm\gtc\type_ptr.hpp"
@@ -201,8 +203,6 @@ void CRenderingSystem::Render()
 		{
 			glUseProgram(i.programID);
 
-			//glUniformBlockBinding(i.programID, i.ubo->getUboIndex(), 0);
-
 			//Get the texture
 			GLint ret = glGetUniformLocation(i.programID, "FontsTexture");
 			glUniform1i(ret, 1);
@@ -210,12 +210,12 @@ void CRenderingSystem::Render()
 			glBindTexture(GL_TEXTURE_2D, 1);
 
 			glBindVertexArray(i.vao->getVaoHandler());
-			GLint offset = 0;
-			GLint size = i.vao->getOffset();
-			for (GLuint c = 0 ; c < i.vao->getElements() ; c++)
+			GLuint ele = i.vao->getElements();
+			GLuint offset_apl = 0;
+			for (GLuint c = 0 ; c < ele ; c++)
 			{
-				offset = c * i.vao->getOffset();
-				glDrawElements(GL_TRIANGLE_STRIP, size, GL_UNSIGNED_INT, &(i.vao->getvIndex())[offset]);
+				offset_apl = c * 4;
+				glDrawArrays(GL_TRIANGLE_STRIP, offset_apl, 4);
 			}
 
 			//glBindVertexArray(0);
@@ -241,6 +241,11 @@ void CRenderingSystem::Render()
 }
 
 void CRenderingSystem::Update(float dt)
+{
+
+}
+
+void CRenderingSystem::Animate()
 {
 
 }

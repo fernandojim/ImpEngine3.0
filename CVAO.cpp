@@ -19,6 +19,9 @@ void CVAO::Clear()
 	m_offset = 0;
 	m_elements = 0;
 
+	m_vboHandler = 0;
+	m_vaoHandler = 0;
+
 	m_Index.clear();
 	m_Vertex.clear();
 	m_Normal.clear();
@@ -27,22 +30,20 @@ void CVAO::Clear()
 	m_Vextex3V3N2NP.clear();
 }
 
-void CVAO::CreateVertexArrays()
+void CVAO::CreateVertexArrayObject()
 {
-	m_arrayhandler = 0;
-
 	/* Creates an arrays object */
-	glGenVertexArrays(1, &m_vaoHandle);
-	glBindVertexArray(m_vaoHandle);
+	glGenVertexArrays(1, &m_vaoHandler);
+	glBindVertexArray(m_vaoHandler);
 }
 
 void CVAO::CreateArrayBuffer(GLvoid *buffer, GLuint size, GLenum usage)
 {
 	// Generates an id for buffer and get its id into 'vbo'
-	glGenBuffers(1, &m_vboHandles[m_arrayhandler]);
+	glGenBuffers(1, &m_vboHandlers[m_vboHandler]);
 
 	// Creates the buffer
-	glBindBuffer(GL_ARRAY_BUFFER, m_vboHandles[m_arrayhandler]);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vboHandlers[m_vboHandler]);
 	glBufferData(GL_ARRAY_BUFFER, size, buffer, usage);
 }
 
@@ -57,10 +58,10 @@ void CVAO::CreateVertexAttribPointer(GLuint program_id, const std::string& attri
 void CVAO::CreateAttribArrayBuffer(GLuint attrib_id, GLuint elements, void *buffer, GLuint size, GLenum usage)
 {
 	/* Generates an id for buffer and get its id into 'vbo' */
-	glGenBuffers(1, &m_vboHandles[m_arrayhandler]);
+	glGenBuffers(1, &m_vboHandlers[m_vboHandler]);
 
 	/* Depending on nElements creates the buffer */
-	glBindBuffer(GL_ARRAY_BUFFER, m_vboHandles[m_arrayhandler]);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vboHandlers[m_vboHandler]);
 	glBufferData(GL_ARRAY_BUFFER, size, buffer, usage);
 
 	glEnableVertexAttribArray(attrib_id);
@@ -69,12 +70,12 @@ void CVAO::CreateAttribArrayBuffer(GLuint attrib_id, GLuint elements, void *buff
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	m_arrayhandler++;
+	m_vboHandler++;
 }
 
 GLuint CVAO::getVaoHandler()
 {
-	return m_vaoHandle;
+	return m_vaoHandler;
 }
 
 GLuint CVAO::getNumVertex()
@@ -175,20 +176,36 @@ void CVAO::addVextex3V3N2NP(const Vextex3V3N2NP& v)
 
 GLuint CVAO::getVBOHandesAt(GLuint buffer_id)
 {
-	return m_vboHandles[buffer_id];
+	return m_vboHandlers[buffer_id];
+}
+
+void CVAO::BindBuffer(GLuint id)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, m_vboHandlers[id]);
+}
+
+void CVAO::MapBuffer()
+{
+	GLvoid *ptr = (Engine::Graphics::Vextex3V3N2NP*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	memcpy(ptr, m_Vextex3V3N2NP.data(), m_Vextex3V3N2NP.size() * sizeof(Vextex3V3N2NP));
+}
+
+void CVAO::UnbindBuffer()
+{
+	glUnmapBuffer(GL_ARRAY_BUFFER);
 }
 
 CVAO::~CVAO()
 {
 	Clear();
 
-	for (GLuint i = 0;i<m_arrayhandler;i++)
-		glDeleteBuffers(1, &m_vboHandles[i]);
+	for (GLuint i = 0;i<m_vboHandler;i++)
+		glDeleteBuffers(1, &m_vboHandlers[i]);
 }
 
 void CVAO::debug()
 {
-	std::cout << "\nVAO(" << m_vaoHandle << ")-->BUFF=" << m_vboHandles[0] << "," << m_vboHandles[1] << "," << m_vboHandles[2];
+	std::cout << "\nVAO(" << m_vboHandler << ")-->BUFF=" << m_vboHandlers[0] << "," << m_vboHandlers[1] << "," << m_vboHandlers[2];
 
 	std::cout.flush();
 }

@@ -58,6 +58,8 @@ namespace Engine
 			glm::mat4 m_view;
 			glm::mat4 m_mvp;
 
+			virtual void ReceiveEvent(void *buff) = 0;
+
 		private:
 			//The type of rendering component
 			renderingComponentType m_renderingComponentType;
@@ -65,7 +67,7 @@ namespace Engine
 			//The shader id for rendering
 			GLuint m_shaderProgramId;
 
-		  	//Vertex Attrib Object
+		  	//Vertex Array Object
 			std::shared_ptr<Engine::Graphics::CVAO> m_vao;
 
 			//Uniforms Buffer Object

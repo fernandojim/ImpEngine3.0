@@ -10,14 +10,14 @@
 #ifndef _CGAMEOBJECT_H_
 #define _CGAMEOBJECT_H_
 
-#include <ImpEngine3.0/src/CComponent.h>
-#include <ImpEngine3.0/src/CObject.h>
 #include <iostream>
 #include <vector>
 #include <map>
 #include <memory>
 #include <unordered_map>
 
+#include "CComponent.h"
+#include "CObject.h"
 
 namespace Engine
 {
@@ -33,12 +33,6 @@ namespace Engine
 			CGameObject(const std::string& name, GameObjectLayer lvl);
 
 			std::shared_ptr<Engine::Component::CComponent> getComponent(Engine::Component::COMPONENT_TYPE c_typ);
-
-			template <class T>
-			inline void addComponent(std::shared_ptr<T> component)
-			{
-
-			}
 
 			void AddComponent(const std::shared_ptr<Engine::Component::CComponent>& comp);
 
@@ -57,8 +51,6 @@ namespace Engine
 			std::shared_ptr<CGameObject> m_gameObjectParent;
 
 			std::map<Engine::Component::COMPONENT_TYPE, std::shared_ptr<Engine::Component::CComponent>> m_components;
-
-			std::unordered_map<int, int> ppe;
 		};
 	}
 }

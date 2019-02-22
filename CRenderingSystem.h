@@ -94,11 +94,9 @@ namespace Engine
 			void startup();
 			void release();
 
+			void Animate();
 			void Update(float dt);
-
 			void Render();
-
-			void clear();
 
 			//Stores the rendering object into the Render system in order to proceed to draw it
 			//The information needed is the VAO object and its uniform buffers object
@@ -110,6 +108,8 @@ namespace Engine
 			std::string getShaderNameById(GLuint id);
 
 			void debug(GLvoid *p);
+
+			void clear();
 
 			static CRenderingSystem& getRenderingSystem();
 

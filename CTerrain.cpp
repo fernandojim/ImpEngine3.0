@@ -139,7 +139,7 @@ CTerrain::CTerrain(const std::string& name, GLuint shaderid, const std::string& 
 				}
 
 				//Cretes the VAO
-				getVAO()->CreateVertexArrays();
+				getVAO()->CreateVertexArrayObject();
 				getVAO()->CreateAttribArrayBuffer(2, 3, getVAO()->getvVertex().data(), getVAO()->getvVertex().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
 				getVAO()->CreateAttribArrayBuffer(3, 3, getVAO()->getvNormal().data(), getVAO()->getvNormal().size() * sizeof(glm::vec3), GL_STATIC_DRAW);
 				getVAO()->CreateAttribArrayBuffer(4, 2, getVAO()->getvTexel().data(), getVAO()->getvTexel().size() * sizeof(glm::vec2), GL_STATIC_DRAW);
@@ -501,4 +501,9 @@ glm::vec3 CTerrain::CalculaNormalVertice(GLuint iVertice)
 void CTerrain::setLights(const CLight& lights)
 {
 	//m_lights = lights;
+}
+
+void CTerrain::ReceiveEvent(void *buff)
+{
+
 }

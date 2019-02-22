@@ -57,6 +57,7 @@ void ComponentManager::load(const std::string& file)
 			//Component to create
 			std::shared_ptr<Engine::Component::CRenderingComponent> render_component;
 			std::shared_ptr<Engine::Component::CTransformComponent> transform_component;
+			std::shared_ptr<Engine::Component::CComponent> component;
 
 			//Common values for all components
 			std::string name = pfile->getAttributeValue("name");             //Its name
@@ -77,6 +78,7 @@ void ComponentManager::load(const std::string& file)
 			{
 				//Rendering Component
 				case Engine::Component::COMPONENT_TYPE::RENDERING:
+
 					mesh_type = pfile->getAttributeValue("MESH_TYPE");
 					mesh_file = pfile->getAttributeValue("FILE");
 					shader = pfile->getAttributeValue("SHADER");
@@ -92,15 +94,17 @@ void ComponentManager::load(const std::string& file)
 					else
 					{
 						//Attach the render component to its gameobject
-						Engine::Managers::GameObjectManager::getGameObjectManagerInstance().AttachComponentToGameObject(render_component, gameobject);
+						Engine::Managers::GameObjectManager::getGameObjectManagerInstance().AttachComponent(render_component, gameobject);
 
 						//Register the Rendering component
 						Engine::System::CRenderingSystem::getRenderingSystem().RegisterRenderingComponent(render_component);
 					}
+
 				break;
 
 				//Transform Component
 				case Engine::Component::COMPONENT_TYPE::TRANSFORM:
+
 					position = pfile->getAttributeValue("POSITION");
 					scale = pfile->getAttributeValue("SCALE");
 
@@ -109,6 +113,7 @@ void ComponentManager::load(const std::string& file)
 																   Engine::Component::stringToVec3(scale));
 
 					//Engine::System::CTransformSystem::getTransformSystem().RegisterObject(obj);
+
 				break;
 				default:
 					Message::MessageBOX("ComponentManager", "Type of component not valid: '" + type + "'");

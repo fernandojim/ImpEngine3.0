@@ -47,6 +47,7 @@ LRESULT GameManager::Run()
 		Engine::Managers::InputManager::getInputManagerInstance().ManageInputEvents();
 
 		//update
+		Engine::System::CRenderingSystem::getRenderingSystem().Update(4.6);
 
 		//Animate(dt)
 

@@ -13,13 +13,25 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <map>
 
+#include "CObject.h"
 #include "CGameObject.h"
 
 namespace Engine
 {
 	namespace Managers
 	{
+		enum class EVENT_TYPE {EVENT_NULL = 0, EVENT_RENDER_TEXT, EVENT_MOVE_GAMEOBJECT};
+
+		struct Event
+		{
+			std::string sender;
+			std::string receiver;
+			EVENT_TYPE eventTyp;
+			void *buffer;
+		};
+
 		class GameObjectManager
 		{
 		public:
@@ -45,25 +57,32 @@ namespace Engine
 			** AttachComponentToGameObject
 			** Method to attach a component to its GameObject
 			********************************************************************************************/
-			void AttachComponentToGameObject(const std::shared_ptr<Engine::Component::CComponent>& render_component, const std::string& go_name);
+			void AttachComponent(const std::shared_ptr<Engine::Component::CComponent>& component, const std::string& go_name);
 
 		   /********************************************************************************************
 			** getGameObjectByName
 			** Return a GameObject obtained by its name
 			********************************************************************************************/
-			std::shared_ptr<Engine::Entity::CGameObject> getGameObjectByName(const std::string& name);
+			std::shared_ptr<Engine::Entity::CGameObject> getGameObject(const std::string& name);
+
+		   /********************************************************************************************
+			** SendMessage
+			** Method to send a message to an entity
+			********************************************************************************************/
+			bool SendEvent(const std::string& sender, const std::string& receiver, EVENT_TYPE typ, void* info);
 
 			void debug();
 
 			static GameObjectManager& getGameObjectManagerInstance();
 
+
 		private:
+
 			//Load objects from file
 			void load(const std::string& file);
 
 			//List of GameObjects
-			std::vector<std::shared_ptr<Engine::Entity::CGameObject>> m_gameObjects;
-
+			std::map<std::string, std::shared_ptr<Engine::Entity::CGameObject>> m_gameObjects;
 		};
 	}
 }
